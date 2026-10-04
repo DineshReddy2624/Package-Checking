@@ -1,49 +1,31 @@
 ===========================================================================
-           MULTI-PACKAGE DAMAGE INSPECTION & RISK REPORT
+     AI-BASED EXTERNAL CONDITION & MULTI-PACKAGE DAMAGE INSPECTION REPORT
 ===========================================================================
-Image Analyzed        : multi_parcel_01.jpg
-Inspection Date/Time  : 2026-10-05 01:56:16
-Total Packages Found  : 4
-  - Safe to Deliver   : 4
-  - Inspect Before Del: 0
-  - Replace Package   : 0
+Image Analyzed        : multi_package_20261005025530.jpg
+Inspection Date/Time  : 2026-10-05 02:55:30
+Total Packages Found  : 1
+  - Valid Packages    : 0
+  - Invalid Detections: 1
+  - Recommended Safe  : 0
+  - Recom. Inspection : 0
+  - Recom. Replacement: 0
 ---------------------------------------------------------------------------
-INDIVIDUAL PACKAGE BREAKDOWN:
+INDIVIDUAL PACKAGE FIVE-STAGE BREAKDOWN:
 ---------------------------------------------------------------------------
-[Package 1]
-  Bounding Box    : [35.4, 258.4, 229.7, 427.5] (Conf: 0.96)
-  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_001.jpg
-  Damage Detected : None (0 defects)
-  Damage Severity : No Damage (0.00% coverage)
-  Internal Risk   : 0.0 / 100
-  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
-  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
-
-[Package 2]
-  Bounding Box    : [212.9, 65.8, 316.5, 145.0] (Conf: 0.92)
-  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_002.jpg
-  Damage Detected : None (0 defects)
-  Damage Severity : No Damage (0.00% coverage)
-  Internal Risk   : 0.0 / 100
-  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
-  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
-
-[Package 3]
-  Bounding Box    : [313.3, 309.7, 396.5, 372.6] (Conf: 0.90)
-  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_003.jpg
-  Damage Detected : None (0 defects)
-  Damage Severity : No Damage (0.00% coverage)
-  Internal Risk   : 0.0 / 100
-  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
-  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
-
-[Package 4]
-  Bounding Box    : [81.3, 72.2, 176.0, 151.5] (Conf: 0.87)
-  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_004.jpg
-  Damage Detected : None (0 defects)
-  Damage Severity : No Damage (0.00% coverage)
-  Internal Risk   : 0.0 / 100
-  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
-  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
+[Package 1] Status: INVALID PACKAGE DETECTION
+  STAGE 1 - PACKAGE DETECTION:
+    Package Detection Confidence : 0.89
+    Bounding Box                 : [23.1, 12.8, 1345.1, 1073.4] (Area Ratio: 89.16%)
+    Quality Gate Status          : REJECTED (Oversized Detection)
+    Crop Image Path              : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_001.jpg
+  STAGE 2 - DAMAGE DETECTION:
+    Damage Detection Result      : Damage analysis was not performed because the package boundary could not be reliably established.
+  STAGE 3 - DAMAGE SEVERITY:
+    Severity Level               : Not Evaluated
+  STAGE 4 - INTERNAL DAMAGE RISK:
+    Heuristic Risk Score         : N/A
+  STAGE 5 - DELIVERY DECISION:
+    Recommended Action           : >>> PACKAGE DETECTION REQUIRES REVIEW <<<
+    Action Required              : Capture a closer image containing the individual package or improve the package detection model.
 
 ===========================================================================

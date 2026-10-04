@@ -1,7 +1,9 @@
-path: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/extracted_package_detector
-train: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/processed/pkg_det_train.txt
-val: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/processed/pkg_det_val.txt
-test: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/processed/pkg_det_test.txt
-names:
-  0: package
+# Stage 1 Multi-Package Individual Box Detector Dataset Config
+path: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/multi_package_dataset
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
 nc: 1
+names: ['package']

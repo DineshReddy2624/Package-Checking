@@ -2,97 +2,30 @@
   "header": {
     "system_name": "Smart AI-Based Delivery Package Damage Detection & Risk Prediction",
     "report_type": "Automated Package Quality & Delivery Inspection Report",
-    "package_id": "PKG-INSPECT-001",
-    "timestamp": "2026-10-05 00:30:53",
-    "image_filename": "single_crushed_package.jpg",
-    "annotated_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\predictions\\pred_single_crushed_package.jpg"
+    "package_id": "PKG-SINGLE-TEST",
+    "timestamp": "2026-10-05 02:09:36",
+    "image_filename": "image_3423.jpg",
+    "annotated_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\predictions\\pred_image_3423.jpg"
   },
   "detection_summary": {
-    "total_defects_detected": 3,
-    "damage_classes_found": [
-      "colanovia",
-      "rotura_retractil"
-    ],
-    "total_damage_coverage_ratio": 0.0948,
-    "total_damage_coverage_percentage": "9.48%"
+    "total_defects_detected": 0,
+    "damage_classes_found": [],
+    "total_damage_coverage_ratio": 0.0,
+    "total_damage_coverage_percentage": "0.00%"
   },
-  "detected_defects": [
-    {
-      "defect_id": 1,
-      "damage_class": "rotura_retractil",
-      "confidence": 0.4554,
-      "bbox": [
-        368.3,
-        1186.7,
-        518.2,
-        1334.8
-      ],
-      "bbox_width": 149.9,
-      "bbox_height": 148.1,
-      "bbox_area": 22201.2,
-      "image_width": 1021,
-      "image_height": 1912,
-      "damage_area_ratio": 0.0114,
-      "damage_area_percentage": 1.14,
-      "location_horizontal": "Center",
-      "location_vertical": "Middle",
-      "location_combined": "Middle-Center"
-    },
-    {
-      "defect_id": 2,
-      "damage_class": "colanovia",
-      "confidence": 0.4208,
-      "bbox": [
-        298.8,
-        1421.1,
-        499.5,
-        1691.2
-      ],
-      "bbox_width": 200.7,
-      "bbox_height": 270.1,
-      "bbox_area": 54209.7,
-      "image_width": 1021,
-      "image_height": 1912,
-      "damage_area_ratio": 0.0278,
-      "damage_area_percentage": 2.78,
-      "location_horizontal": "Center",
-      "location_vertical": "Bottom",
-      "location_combined": "Bottom-Center"
-    },
-    {
-      "defect_id": 3,
-      "damage_class": "colanovia",
-      "confidence": 0.3428,
-      "bbox": [
-        222.3,
-        211.6,
-        456.1,
-        627.0
-      ],
-      "bbox_width": 233.8,
-      "bbox_height": 415.4,
-      "bbox_area": 97113.5,
-      "image_width": 1021,
-      "image_height": 1912,
-      "damage_area_ratio": 0.0497,
-      "damage_area_percentage": 4.97,
-      "location_horizontal": "Center",
-      "location_vertical": "Top",
-      "location_combined": "Top-Center"
-    }
-  ],
+  "detected_defects": [],
   "severity_assessment": {
     "method": "Heuristic Damage Severity Assessment",
-    "severity_level": "Moderate",
-    "severity_score_normalized": 0.4885,
-    "rationale": "Moderate damage detected (3 defects, 9.5% area coverage)."
+    "severity_level": "No Damage",
+    "severity_score_normalized": 0.0,
+    "rationale": "No structural or surface defects detected on external package packaging."
   },
   "risk_prediction": {
     "metric_name": "Estimated Internal Damage Risk Score",
-    "risk_score": 64.8,
+    "risk_score": 0.0,
     "score_scale": "0 - 100",
-    "delivery_decision": "INSPECT BEFORE DELIVERY",
-    "recommended_action": "Moderate package deformation or tearing. Flag for courier/warehouse visual check or recipient notice prior to handover.",
+    "delivery_decision": "SAFE TO DELIVER",
+    "recommended_action": "Package package appears structurally sound with no external defects. Safe for direct customer delivery.",
     "decision_rule_reference": {
       "safe_to_deliver": "Score < 25",
       "inspect_before_delivery": "Score 25 - 65",

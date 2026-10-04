@@ -18,6 +18,10 @@ runs/
 data/extracted/
 data/extracted*/
 data/raw/
+data/raw_*/
+data/multi_package_dataset/
+data/processed/multiple_parcels/
+data/processed/single_parcel/
 
 # IDE & OS
 .vscode/

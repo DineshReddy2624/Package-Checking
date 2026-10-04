@@ -36,13 +36,11 @@ def run_multi_package_test(image_path: Optional[Path] = None, pkg_conf: float = 
 
     # Locate sample test image
     if image_path is None:
-        # Check sample_images
         candidates = [
             SAMPLE_IMAGES_DIR / "multi_package_warehouse.jpg",
-            SAMPLE_IMAGES_DIR / "multi_package_pallet.jpg",
-            PROJECT_ROOT / "data/extracted/box_defect_dataset/box_defect_dataset/real/images/test/test_bulto_00021_a2e5618c15.jpg",
-            PROJECT_ROOT / "data/extracted/box_defect_dataset/box_defect_dataset/real/images/test/test_bulto_00033_64d9a9c3b3.jpg",
-            SAMPLE_IMAGES_DIR / "package.jpg",
+            SAMPLE_IMAGES_DIR / "multiple_parcels" / "multi_parcel_01.jpg",
+            SAMPLE_IMAGES_DIR / "multiple_parcels" / "multi_parcel_06.jpg",
+            SAMPLE_IMAGES_DIR / "single_damaged_package.jpg",
         ]
         for c in candidates:
             if c.exists():
@@ -53,14 +51,7 @@ def run_multi_package_test(image_path: Optional[Path] = None, pkg_conf: float = 
         logger.error(f"Test image not found at {image_path}. Please provide a valid image path.")
         sys.exit(1)
 
-    logger.info(f"Loading test multi-package scene image: {image_path}")
-
-    # Copy image to sample_images/multi_package_warehouse.jpg if not present
-    SAMPLE_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-    sample_multi_target = SAMPLE_IMAGES_DIR / "multi_package_warehouse.jpg"
-    if not sample_multi_target.exists():
-        import shutil
-        shutil.copy2(image_path, sample_multi_target)
+    logger.info(f"Loading test scene image: {image_path}")
 
     # Initialize Two-Stage Inspector
     inspector = TwoStagePackageInspector(
@@ -74,31 +65,50 @@ def run_multi_package_test(image_path: Optional[Path] = None, pkg_conf: float = 
     results = inspector.inspect_scene(image_input=image_path, crop_margin_pct=0.05)
 
     # Print results summary
-    print("\n" + "-" * 75)
-    print(f"MULTI-PACKAGE DETECTION RESULTS FOR: {image_path.name}")
-    print("-" * 75)
-    print(f"Detected packages: {results['total_packages']}")
-    for p in results["package_evaluations"]:
-        print(
-            f"  - {p['package_id']:12s} | Conf: {p['detector_confidence']:.2f} | "
-            f"Box: {p['original_bbox']} | Crop: {Path(p['crop_path']).name}"
-        )
-        sev = p["severity_assessment"]["severity_level"]
-        risk = p["risk_prediction"]["risk_score"]
-        dec = p["risk_prediction"]["delivery_decision"]
-        dmgs = ", ".join(p["damage_classes_found"]) if p["damage_classes_found"] else "None"
-        print(f"    -> Damage: {dmgs} | Severity: {sev} | Risk: {risk}/100 | Decision: {dec}")
+    print("\n" + "=" * 80)
+    print(f"AI-BASED EXTERNAL CONDITION & FIVE-STAGE INSPECTION RESULTS: {image_path.name}")
+    print("=" * 80)
+    print(f"Total Individual Packages Detected: {results['total_packages']}\n")
 
-    print("\n" + "=" * 75)
-    print("DELIVERY DECISION SUMMARY:")
-    print(f"  Safe to Deliver        : {results['safe_count']}")
-    print(f"  Inspect Before Delivery: {results['inspect_count']}")
-    print(f"  Replace Package        : {results['replace_count']}")
-    print(f"Stage 1 Package Detection Image : {results['stage1_image_path']}")
-    print(f"Final Annotated Inspection Image: {results['final_image_path']}")
-    print(f"Structured JSON Report          : {results['json_report_path']}")
-    print(f"Human-Readable TXT Report       : {results['txt_report_path']}")
-    print("=" * 75 + "\n")
+    for p in results["package_evaluations"]:
+        s1 = p["stage1_package_detection"]
+        s2 = p["stage2_damage_detection"]
+        s3 = p["stage3_damage_severity"]
+        s4 = p["stage4_internal_damage_risk"]
+        s5 = p["stage5_delivery_decision"]
+
+        print(f"📦 [{p['package_id']}]")
+        print(f"   STAGE 1 — PACKAGE DETECTION")
+        print(f"     • Detection Confidence : {s1['package_detection_confidence']:.2f}")
+        print(f"     • Bounding Box          : {s1['bounding_box']} (Area Ratio: {s1['bounding_box_area_ratio_pct']})")
+        if s1.get("is_suspicious_crop") and s1.get("warning"):
+            print(f"     • ⚠️ {s1['warning']}")
+        print(f"     • Crop File            : {Path(p['crop_path']).name}")
+        print(f"   STAGE 2 — DAMAGE DETECTION")
+        print(f"     • Result               : {s2['damage_detection_result']}")
+        print(f"     • Damage Confidence    : {s2['damage_confidence']}")
+        print(f"   STAGE 3 — DAMAGE SEVERITY")
+        print(f"     • Severity Level       : {s3['severity_level']} (Coverage: {s3['damage_area_coverage']})")
+        print(f"     • Rationale            : {s3['rationale']}")
+        print(f"   STAGE 4 — INTERNAL DAMAGE RISK")
+        print(f"     • Heuristic Risk Score : {s4['heuristic_risk_score']:.0f} / 100 ({s4['score_nature']})")
+        print(f"   STAGE 5 — DELIVERY DECISION")
+        print(f"     • Recommended Decision : >>> {s5['recommended_delivery_decision']} <<< ({s5['decision_type']})")
+        print(f"     • Action Required      : {s5['action_required']}\n")
+
+    print("=" * 80)
+    print("LOGISTICS SUMMARY (STAGE 1 QUALITY GATE & MODEL RECOMMENDATIONS):")
+    print(f"  📦 Total Candidate Packages    : {results['total_packages']}")
+    print(f"  ✅ Valid Individual Packages   : {results['valid_count']}")
+    print(f"  ❌ Invalid / Oversized Regions : {results['invalid_count']}")
+    print(f"  🟢 Recommended Safe to Deliver : {results['safe_count']}")
+    print(f"  🟡 Recommended Inspect Before  : {results['inspect_count']}")
+    print(f"  🔴 Recommended Replace Package : {results['replace_count']}")
+    print(f"Stage 1 Package Detection Image  : {results['stage1_image_path']}")
+    print(f"Final Annotated Inspection Image : {results['final_image_path']}")
+    print(f"Structured JSON Report           : {results['json_report_path']}")
+    print(f"Human-Readable TXT Report        : {results['txt_report_path']}")
+    print("=" * 80 + "\n")
 
 
 if __name__ == "__main__":

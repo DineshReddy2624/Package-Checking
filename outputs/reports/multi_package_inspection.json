@@ -1,121 +1,110 @@
 {
   "header": {
-    "system_name": "Smart Two-Stage Multi-Package Damage & Risk Inspection System",
-    "timestamp": "2026-10-05 01:56:16",
-    "source_image": "multi_parcel_01.jpg",
+    "system_name": "Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk Prediction System",
+    "inspection_type": "AI-Based External Condition Assessment & Heuristic Risk Prediction",
+    "timestamp": "2026-10-05 02:55:30",
+    "source_image": "multi_package_20261005025530.jpg",
     "final_annotated_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\final\\multi_package_final_result.jpg",
     "stage1_detection_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_detector\\multi_package_detection.jpg"
   },
   "summary": {
-    "total_packages_detected": 4,
-    "safe_to_deliver_count": 4,
+    "total_packages_detected": 1,
+    "valid_packages_count": 0,
+    "invalid_packages_count": 1,
+    "safe_to_deliver_count": 0,
     "inspect_before_delivery_count": 0,
-    "replace_package_count": 0
+    "replace_package_count": 0,
+    "quality_gate_threshold_max_area_ratio": "80%",
+    "decision_nature": "Model Recommendation based on observable external visual features"
   },
   "package_results": [
     {
       "package_id": "Package 1",
-      "detector_confidence": 0.9604,
+      "is_valid_package": false,
+      "detection_status": "INVALID PACKAGE DETECTION",
+      "delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
+      "risk_score": null,
+      "risk_score_display": "N/A",
+      "stage1_package_detection": {
+        "package_id": "Package 1",
+        "status": "INVALID_PACKAGE_DETECTION",
+        "package_detection_confidence": 0.893,
+        "bounding_box": [
+          23.1,
+          12.8,
+          1345.1,
+          1073.4
+        ],
+        "bounding_box_area_ratio": 0.8916,
+        "bounding_box_area_ratio_pct": "89.16%",
+        "is_suspicious_crop": true,
+        "warning": "WARNING: Detected region is too large to confidently represent an individual package.",
+        "rejection_reason": "Detected region is too large to confidently represent an individual package.",
+        "rejection_action": "Capture a closer image containing the individual package or improve the package detection model."
+      },
+      "stage2_damage_detection": {
+        "status": "SKIPPED_QUALITY_GATE",
+        "damage_detected": null,
+        "damage_detection_result": "Damage analysis was not performed because the package boundary could not be reliably established.",
+        "damage_confidence": "N/A",
+        "defects_detected_count": 0,
+        "defects": []
+      },
+      "stage3_damage_severity": {
+        "status": "SKIPPED_QUALITY_GATE",
+        "severity_level": "Not Evaluated",
+        "damage_area_coverage": "N/A",
+        "total_coverage_ratio": 0.0,
+        "severity_score_normalized": 0.0,
+        "rationale": "Damage severity evaluation skipped because Stage 1 package detection quality gate failed."
+      },
+      "stage4_internal_damage_risk": {
+        "status": "SKIPPED_QUALITY_GATE",
+        "risk_metric_name": "Heuristic Estimated Internal Damage Risk Score",
+        "heuristic_risk_score": null,
+        "risk_score_display": "N/A",
+        "score_scale": "0 - 100",
+        "is_probability": false,
+        "score_nature": "Not evaluated (Stage 1 Quality Gate rejected)."
+      },
+      "stage5_delivery_decision": {
+        "status": "QUALITY_GATE_REJECTED",
+        "recommended_delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
+        "decision_type": "Stage 1 Quality Gate Rejection",
+        "action_required": "Capture a closer image containing the individual package or improve the package detection model.",
+        "justification": "Stage 1 could not reliably isolate an individual package from the input image."
+      },
+      "detector_confidence": 0.893,
       "original_bbox": [
-        35.4,
-        258.4,
-        229.7,
-        427.5
+        23.1,
+        12.8,
+        1345.1,
+        1073.4
       ],
+      "box_area_ratio_pct": "89.16%",
+      "is_suspicious_crop": true,
+      "warning": "WARNING: Detected region is too large to confidently represent an individual package.",
       "crop_filename": "package_001.jpg",
       "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_001.jpg",
       "defects_detected_count": 0,
       "damage_classes_found": [],
+      "damage_confidence": "N/A",
       "defects": [],
       "severity_assessment": {
-        "severity_level": "No Damage",
-        "total_coverage_percentage": "0.00%",
-        "rationale": "No structural or surface defects detected on external package packaging."
+        "severity_level": "Not Evaluated",
+        "total_coverage_percentage": "N/A",
+        "rationale": "Damage analysis skipped due to Stage 1 Quality Gate rejection."
       },
       "risk_prediction": {
-        "risk_score": 0.0,
-        "delivery_decision": "SAFE TO DELIVER",
-        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
-      }
-    },
-    {
-      "package_id": "Package 2",
-      "detector_confidence": 0.9205,
-      "original_bbox": [
-        212.9,
-        65.8,
-        316.5,
-        145.0
-      ],
-      "crop_filename": "package_002.jpg",
-      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_002.jpg",
-      "defects_detected_count": 0,
-      "damage_classes_found": [],
-      "defects": [],
-      "severity_assessment": {
-        "severity_level": "No Damage",
-        "total_coverage_percentage": "0.00%",
-        "rationale": "No structural or surface defects detected on external package packaging."
-      },
-      "risk_prediction": {
-        "risk_score": 0.0,
-        "delivery_decision": "SAFE TO DELIVER",
-        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
-      }
-    },
-    {
-      "package_id": "Package 3",
-      "detector_confidence": 0.9037,
-      "original_bbox": [
-        313.3,
-        309.7,
-        396.5,
-        372.6
-      ],
-      "crop_filename": "package_003.jpg",
-      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_003.jpg",
-      "defects_detected_count": 0,
-      "damage_classes_found": [],
-      "defects": [],
-      "severity_assessment": {
-        "severity_level": "No Damage",
-        "total_coverage_percentage": "0.00%",
-        "rationale": "No structural or surface defects detected on external package packaging."
-      },
-      "risk_prediction": {
-        "risk_score": 0.0,
-        "delivery_decision": "SAFE TO DELIVER",
-        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
-      }
-    },
-    {
-      "package_id": "Package 4",
-      "detector_confidence": 0.8738,
-      "original_bbox": [
-        81.3,
-        72.2,
-        176.0,
-        151.5
-      ],
-      "crop_filename": "package_004.jpg",
-      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_004.jpg",
-      "defects_detected_count": 0,
-      "damage_classes_found": [],
-      "defects": [],
-      "severity_assessment": {
-        "severity_level": "No Damage",
-        "total_coverage_percentage": "0.00%",
-        "rationale": "No structural or surface defects detected on external package packaging."
-      },
-      "risk_prediction": {
-        "risk_score": 0.0,
-        "delivery_decision": "SAFE TO DELIVER",
-        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+        "risk_score": null,
+        "delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
+        "action_required": "Capture a closer image containing the individual package or improve the package detection model."
       }
     }
   ],
   "models_used": {
-    "package_detector": "package_detector_best.pt",
-    "damage_detector": "damage_detector_best.pt"
-  }
+    "stage1_package_detector": "package_detector_best.pt",
+    "stage2_damage_detector": "damage_detector_best.pt"
+  },
+  "disclaimer": "The delivery decision is a model recommendation derived from camera-observable external visual features and heuristic risk scoring (0-100). The system does not inspect internal package cushioning directly."
 }

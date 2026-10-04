@@ -37,7 +37,7 @@ def calculate_internal_damage_risk(
     if severity_level == "No Damage" or num_defects == 0:
         risk_score = 0.0
         delivery_decision = "SAFE TO DELIVER"
-        decision_action = "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+        decision_action = "Based on the detected external condition and the configured heuristic risk threshold, the system recommends this package for delivery."
     else:
         # 1. Base Severity
         base_map = {
@@ -56,10 +56,9 @@ def calculate_internal_damage_risk(
         # 4. Critical location / type bonus (up to 10 pts)
         loc_type_pts = 0.0
         for f in defect_features:
-            # Top impacts or corner areas often compromise internal content cushioning
             if f.get("location_vertical") == "Top":
                 loc_type_pts += 3.0
-            if any(k in f.get("damage_class", "").lower() for k in ["crush", "puncture", "hole", "break"]):
+            if any(k in f.get("damage_class", "").lower() for k in ["crush", "puncture", "hole", "break", "tear"]):
                 loc_type_pts += 4.0
         loc_type_pts = min(10.0, loc_type_pts)
 
@@ -67,22 +66,25 @@ def calculate_internal_damage_risk(
         raw_risk = base_pts + area_pts + count_pts + loc_type_pts
         risk_score = min(100.0, max(0.0, raw_risk))
 
-        # Heuristic Business Delivery Decision
+        # Heuristic Model Delivery Decision Recommendation
         if risk_score < 25.0:
             delivery_decision = "SAFE TO DELIVER"
-            decision_action = "Minor cosmetic blemishes only. High probability internal contents remain intact. Proceed with delivery."
+            decision_action = "Based on the detected external condition and the configured heuristic risk threshold, the system recommends this package for delivery."
         elif risk_score <= 65.0:
             delivery_decision = "INSPECT BEFORE DELIVERY"
-            decision_action = "Moderate package deformation or tearing. Flag for courier/warehouse visual check or recipient notice prior to handover."
+            decision_action = "Moderate external package flaws observed. The system recommends manual physical inspection before customer delivery."
         else:
             delivery_decision = "REPLACE PACKAGE"
-            decision_action = "High risk of internal product compromise. Halt delivery, return to fulfillment center for replacement or internal verification."
+            decision_action = "High external damage observed exceeding heuristic threshold. The system recommends secondary facility check or package replacement."
 
     return {
-        "risk_metric_name": "Estimated Internal Damage Risk Score",
+        "risk_metric_name": "Heuristic Estimated Internal Damage Risk Score",
         "risk_score": round(risk_score, 1),
         "score_range": "0 - 100",
+        "is_probability": False,
+        "score_nature": "Heuristic risk score derived from external visual defect features; not a calibrated probability.",
         "delivery_decision": delivery_decision,
+        "recommended_delivery_decision": delivery_decision,
         "decision_action": decision_action,
         "decision_thresholds": {
             "safe_to_deliver": "Score < 25",

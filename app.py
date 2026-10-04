@@ -303,15 +303,17 @@ def main():
             )
 
         # -------------------------------------------------------------
-        # 1. TOP KPI STATUS BAR
+        # 1. TOP KPI STATUS BAR (WITH QUALITY GATE TELEMETRY)
         # -------------------------------------------------------------
         st.divider()
-        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
-        kpi1.metric("📦 Packages Found", results["total_packages"])
-        kpi2.metric("🟢 Safe to Deliver", results["safe_count"])
-        kpi3.metric("🟡 Needs Inspection", results["inspect_count"])
-        kpi4.metric("🔴 Needs Replacement", results["replace_count"])
-        kpi5.metric("⚡ Total Latency", f"{elapsed_time:.0f} ms")
+        kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, kpi7 = st.columns(7)
+        kpi1.metric("📦 Found", results["total_packages"])
+        kpi2.metric("✅ Valid", results["valid_count"])
+        kpi3.metric("❌ Invalid", results["invalid_count"])
+        kpi4.metric("🟢 Safe", results["safe_count"])
+        kpi5.metric("🟡 Inspect", results["inspect_count"])
+        kpi6.metric("🔴 Replace", results["replace_count"])
+        kpi7.metric("⚡ Latency", f"{elapsed_time:.0f} ms")
 
         # -------------------------------------------------------------
         # 2. AI INTELLIGENT QUALITY & LOGISTICS ADVICE
@@ -319,7 +321,7 @@ def main():
         st.markdown(
             f"""
             <div class="ai-card">
-                <div class="ai-card-header">✨ AI Quality Assessment & Logistics Advisor</div>
+                <div class="ai-card-header">✨ AI-Based External Condition Assessment & Logistics Recommendation</div>
                 <div class="ai-summary-text">
                     {llm_notes['executive_summary']}
                 </div>
@@ -333,9 +335,9 @@ def main():
             st.markdown(
                 f"""
                 <div class="subcard">
-                    <h4 style="margin-top:0; color:#38bdf8;">🔬 Structural & Integrity Analysis</h4>
+                    <h4 style="margin-top:0; color:#38bdf8;">🔬 External Condition & Quality Gate Status</h4>
                     <div style="font-size: 0.95rem; line-height: 1.6; color:#cbd5e1;">
-                        {llm_notes.get('integrity_analysis', 'Full container integrity verified with zero physical compromise.')}
+                        {llm_notes.get('integrity_analysis', 'No externally visible damage was detected.')}
                     </div>
                 </div>
                 """,
@@ -343,17 +345,17 @@ def main():
             )
 
         with col_llm_right:
-            courier_txt = llm_notes.get('courier_instructions', 'Standard route dispatch permitted.')
-            cust_txt = llm_notes.get('customer_note', 'Your package passed AI quality inspection with 100% integrity.')
+            courier_txt = llm_notes.get('courier_instructions', 'Proceed with standard dispatch routing.')
+            cust_txt = llm_notes.get('customer_note', 'Your package has completed AI-based external visual inspection.')
             st.markdown(
                 f"""
                 <div class="subcard">
-                    <h4 style="margin-top:0; color:#34d399;">🚚 Courier Field Protocol & Customer Update</h4>
+                    <h4 style="margin-top:0; color:#34d399;">🚚 Courier Field Protocol & Customer Notification</h4>
                     <div style="font-size: 0.95rem; line-height: 1.6; color:#cbd5e1; margin-bottom: 0.8rem;">
                         {courier_txt}
                     </div>
                     <div style="font-size: 0.9rem; color:#94a3b8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.6rem;">
-                        📱 <b>Customer SMS/Tracking</b>: <i>"{cust_txt}"</i>
+                        📱 <b>Customer SMS / Tracking</b>: <i>"{cust_txt}"</i>
                     </div>
                 </div>
                 """,
@@ -373,25 +375,34 @@ def main():
             st.image(cv2.cvtColor(stage1_bgr, cv2.COLOR_BGR2RGB))
 
         with img_col2:
-            st.markdown("**Final Result: Multi-Package Delivery Decision Badges**")
+            st.markdown("**Stage 5: Final Multi-Package Recommendation Badges**")
             final_bgr = cv2.imread(results["final_image_path"])
             st.image(cv2.cvtColor(final_bgr, cv2.COLOR_BGR2RGB))
 
         # -------------------------------------------------------------
-        # 4. INDIVIDUAL PACKAGE DEEP DIVE CARDS
+        # 4. INDIVIDUAL PACKAGE FIVE-STAGE DEEP DIVE CARDS
         # -------------------------------------------------------------
         st.divider()
-        st.subheader("🔎 Individual Package Breakdown")
+        st.subheader("🔎 Individual Package Five-Stage Analysis")
 
         for p in results["package_evaluations"]:
             pkg_id = p["package_id"]
-            decision = p["risk_prediction"]["delivery_decision"]
-            risk_score = p["risk_prediction"]["risk_score"]
-            sev_level = p["severity_assessment"]["severity_level"]
-            cov_pct = p["severity_assessment"]["total_coverage_percentage"]
-            dmgs = p["damage_classes_found"]
+            is_valid = p.get("is_valid_package", True)
+            s1 = p["stage1_package_detection"]
+            s2 = p["stage2_damage_detection"]
+            s3 = p["stage3_damage_severity"]
+            s4 = p["stage4_internal_damage_risk"]
+            s5 = p["stage5_delivery_decision"]
 
-            with st.expander(f"📦 {pkg_id}  —  {decision} (Risk Score: {risk_score:.0f}/100)", expanded=True):
+            decision = s5["recommended_delivery_decision"]
+
+            expander_title = (
+                f"📦 {pkg_id}  —  Recommended Decision: {decision} (Risk Score: {s4['heuristic_risk_score']:.0f}/100)"
+                if is_valid
+                else f"📦 {pkg_id}  —  ⚠️ INVALID PACKAGE DETECTION (Area: {s1['bounding_box_area_ratio_pct']})"
+            )
+
+            with st.expander(expander_title, expanded=True):
                 c_left, c_right = st.columns([1, 2])
 
                 with c_left:
@@ -400,25 +411,75 @@ def main():
                         st.image(crop_img, caption=f"{pkg_id} Isolated Crop")
 
                 with c_right:
-                    if decision == "SAFE TO DELIVER":
-                        st.markdown(f'<span class="badge-safe">🟢 {decision}</span>', unsafe_allow_html=True)
-                    elif decision == "INSPECT BEFORE DELIVERY":
-                        st.markdown(f'<span class="badge-inspect">🟡 {decision}</span>', unsafe_allow_html=True)
+                    if is_valid:
+                        if decision == "SAFE TO DELIVER":
+                            st.markdown(f'<span class="badge-safe">🟢 {decision} (RECOMMENDED)</span>', unsafe_allow_html=True)
+                        elif decision == "INSPECT BEFORE DELIVERY":
+                            st.markdown(f'<span class="badge-inspect">🟡 {decision} (RECOMMENDED)</span>', unsafe_allow_html=True)
+                        else:
+                            st.markdown(f'<span class="badge-replace">🔴 {decision} (RECOMMENDED)</span>', unsafe_allow_html=True)
+
+                        st.markdown(
+                            f"""
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #60a5fa; font-weight: 700; margin-bottom: 4px;">STAGE 1 — PACKAGE DETECTION (VALID)</div>
+                                <div>• <b>Package Detection Confidence</b>: <code>{s1['package_detection_confidence']:.2f}</code></div>
+                                <div>• <b>Bounding Box</b>: <code>{s1['bounding_box']}</code> (Area Coverage: <code>{s1['bounding_box_area_ratio_pct']}</code>)</div>
+                            </div>
+
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #38bdf8; font-weight: 700; margin-bottom: 4px;">STAGE 2 — DAMAGE DETECTION</div>
+                                <div>• <b>Damage Detection Result</b>: <code>{s2['damage_detection_result']}</code></div>
+                                <div>• <b>Damage Confidence</b>: <code>{s2['damage_confidence']}</code></div>
+                            </div>
+
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #fbbf24; font-weight: 700; margin-bottom: 4px;">STAGE 3 — DAMAGE SEVERITY</div>
+                                <div>• <b>Assessed Severity Level</b>: <code>{s3['severity_level']}</code></div>
+                                <div>• <b>Damage Area Coverage</b>: <code>{s3['damage_area_coverage']}</code></div>
+                                <div>• <b>Severity Rationale</b>: {s3['rationale']}</div>
+                            </div>
+
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #a78bfa; font-weight: 700; margin-bottom: 4px;">STAGE 4 — INTERNAL DAMAGE RISK</div>
+                                <div>• <b>Heuristic Estimated Internal Damage Risk Score</b>: <b>{s4['heuristic_risk_score']:.0f} / 100</b></div>
+                                <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 2px;"><i>{s4['score_nature']}</i></div>
+                            </div>
+
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #34d399; font-weight: 700; margin-bottom: 4px;">STAGE 5 — DELIVERY DECISION</div>
+                                <div>• <b>Recommended Delivery Decision</b>: <b>{s5['recommended_delivery_decision']}</b> (<i>{s5['decision_type']}</i>)</div>
+                                <div>• <b>Action Required</b>: {s5['action_required']}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
                     else:
-                        st.markdown(f'<span class="badge-replace">🔴 {decision}</span>', unsafe_allow_html=True)
+                        # INVALID DETECTION PRESENTATION
+                        st.markdown('<span class="badge-inspect">⚠️ INVALID PACKAGE DETECTION</span>', unsafe_allow_html=True)
+                        st.error("⚠️ Stage 1 Quality Gate Rejection: Detected region is too large to represent an individual package.")
 
-                    st.markdown(f"**Action Required**: {p['risk_prediction']['action_required']}")
-                    st.progress(min(1.0, risk_score / 100.0), text=f"Estimated Internal Damage Risk: {risk_score:.0f} / 100")
+                        st.markdown(
+                            f"""
+                            <div style="background: rgba(220, 38, 38, 0.15); padding: 14px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                <div style="color: #f87171; font-weight: 700; margin-bottom: 6px;">STAGE 1 — QUALITY GATE REJECTION</div>
+                                <div>• <b>Status</b>: <code>INVALID PACKAGE DETECTION</code></div>
+                                <div>• <b>Bounding Box</b>: <code>{s1['bounding_box']}</code></div>
+                                <div>• <b>Area Coverage</b>: <code>{s1['bounding_box_area_ratio_pct']}</code> (Exceeds maximum package area threshold)</div>
+                                <div>• <b>Reason</b>: {s1['rejection_reason']}</div>
+                                <div>• <b>Action</b>: {s1['rejection_action']}</div>
+                            </div>
 
-                    st.markdown(
-                        f"""
-                        - **Damage Detected**: {', '.join(dmgs) if dmgs else 'None (Clean)'} ({p['defects_detected_count']} defects)
-                        - **Severity Level**: `{sev_level}` (Damage Area Coverage: `{cov_pct}`)
-                        - **Stage 1 Detector Confidence**: `{p['detector_confidence']:.2f}`
-                        - **Bounding Box**: `{p['original_bbox']}`
-                        - **Severity Rationale**: {p['severity_assessment']['rationale']}
-                        """
-                    )
+                            <div style="background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.06);">
+                                <div style="color: #94a3b8; font-weight: 700; margin-bottom: 6px;">STAGES 2 – 5 STATUS: BYPASSED</div>
+                                <div style="font-size: 0.92rem; color: #cbd5e1; line-height: 1.5;">
+                                    Damage analysis was <b>not performed</b> because the package boundary could not be reliably established.
+                                    The system will not assign <i>Safe to Deliver</i> or a zero risk score to an invalid detection.
+                                </div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
 
         # -------------------------------------------------------------
         # 5. EXPORT & DOWNLOAD

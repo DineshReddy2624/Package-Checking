@@ -7,6 +7,22 @@ from typing import List, Dict, Any, Tuple
 import numpy as np
 
 
+# Standard Canonical Damage Taxonomy & Multilingual Synonym Mapping
+CANONICAL_DAMAGE_TAXONOMY = {
+    # 5 Intended English Damage Classes
+    "torn_wrapping": "torn_wrapping",
+    "crushed_corner": "crushed_corner",
+    "puncture_hole": "puncture_hole",
+    "wet_stain": "wet_stain",
+    "deformation": "deformation",
+    # Mapped Spanish Dataset Classes (Box Defect Dataset)
+    "colanovia": "tape_seam_failure",
+    "rotura_bulto": "puncture_hole",
+    "abolladura": "crushed_corner",
+    "rotura_retractil": "torn_wrapping",
+}
+
+
 def determine_spatial_location(
     x_center: float, y_center: float, img_w: int, img_h: int
 ) -> Dict[str, str]:
@@ -47,6 +63,7 @@ def extract_defect_features(
 ) -> List[Dict[str, Any]]:
     """
     Extracts geometric, spatial, and probabilistic features from detected bounding boxes.
+    Applies Canonical Damage Taxonomy mapping with unknown-class safety.
     """
     img_h, img_w = image_shape
     img_area = float(img_w * img_h)
@@ -64,9 +81,20 @@ def extract_defect_features(
 
         loc = determine_spatial_location(x_center, y_center, img_w, img_h)
 
+        # Canonical class resolution & unknown-class safety
+        raw_name = str(cls_name).strip().lower()
+        if raw_name in CANONICAL_DAMAGE_TAXONOMY:
+            canonical_class = CANONICAL_DAMAGE_TAXONOMY[raw_name]
+            is_unknown = False
+        else:
+            canonical_class = "UNKNOWN DAMAGE CLASS"
+            is_unknown = True
+
         feat = {
             "defect_id": i + 1,
-            "damage_class": cls_name,
+            "damage_class": canonical_class,
+            "raw_damage_class": cls_name,
+            "is_unknown_class": is_unknown,
             "confidence": round(float(conf), 4),
             "bbox": [round(x1, 1), round(y1, 1), round(x2, 1), round(y2, 1)],
             "bbox_width": round(bw, 1),
@@ -167,7 +195,12 @@ def assess_damage_severity(
     severity_score = min(1.0, raw_score)
 
     # Classification boundaries
-    if severity_score < 0.25 and total_coverage_ratio < 0.04 and num_defects == 1:
+    has_unknown = any(f.get("is_unknown_class", False) for f in extracted_features)
+    if has_unknown and total_coverage_ratio < 0.15:
+        severity_score = min(0.35, severity_score)
+        severity_level = "Minor" if severity_score < 0.25 else "Moderate"
+        rationale = f"Unverified defect type ('UNKNOWN DAMAGE CLASS') detected with {total_coverage_ratio*100:.1f}% area coverage; requires manual inspection review."
+    elif severity_score < 0.25 and total_coverage_ratio < 0.04 and num_defects == 1:
         severity_level = "Minor"
         rationale = f"Minor surface flaw ({num_defects} defect, {total_coverage_ratio*100:.1f}% area coverage)."
     elif severity_score < 0.60:

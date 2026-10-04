@@ -96,9 +96,12 @@ class TwoStagePackageInspector:
         image_input: Union[str, Path, np.ndarray],
         output_prefix: str = "multi_package",
         crop_margin_pct: float = 0.05,
+        max_package_area_ratio: float = 0.80,
     ) -> Dict[str, Any]:
         """
         Executes complete Two-Stage inspection on a single or multi-package scene image.
+        Applies a strict Stage 1 Quality Gate (MAX_PACKAGE_AREA_RATIO = 0.80 default).
+        Invalid/suspicious detections are quarantined and bypassed from Stage 2 damage analysis.
         """
         FINAL_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         PACKAGE_DETECTOR_DIR.mkdir(parents=True, exist_ok=True)
@@ -133,27 +136,15 @@ class TwoStagePackageInspector:
 
         pkg_boxes = []
         pkg_confs = []
-        img_area = float(img_w * img_h)
 
         if pkg_results.boxes is not None and len(pkg_results.boxes) > 0:
             for box in pkg_results.boxes:
                 xyxy = box.xyxy[0].cpu().numpy().tolist()
                 conf = float(box.conf[0].item())
-                bw = xyxy[2] - xyxy[0]
-                bh = xyxy[3] - xyxy[1]
-                box_area_ratio = (bw * bh) / max(1.0, img_area)
-
-                # Reject detections that cover > 80% of the entire image scene
-                if box_area_ratio > 0.80 and len(pkg_results.boxes) > 1:
-                    logger.warning(
-                        f"Skipping bounding box {xyxy} covering {box_area_ratio*100:.1f}% of image (represents entire scene/pallet, not individual package)."
-                    )
-                    continue
-
                 pkg_boxes.append(xyxy)
                 pkg_confs.append(conf)
 
-        logger.info(f"Detected {len(pkg_boxes)} individual separate packages in scene.")
+        logger.info(f"Stage 1 detected {len(pkg_boxes)} candidate package region(s).")
 
         # Draw Stage 1 Package Detection image
         stage1_img = img_bgr.copy()
@@ -176,21 +167,24 @@ class TwoStagePackageInspector:
         cv2.imwrite(str(stage1_out_path), stage1_img)
         logger.info(f"Saved Stage 1 detection visualization to {stage1_out_path}")
 
-        # Crop each individual package
+        # Crop each individual package and evaluate Stage 1 Quality Gate
         crops = crop_individual_packages(
             image_input=img_bgr,
             package_boxes=pkg_boxes,
             confidences=pkg_confs,
             margin_pct=crop_margin_pct,
+            max_package_area_ratio=max_package_area_ratio,
             output_dir=PACKAGE_CROPS_DIR,
             save_to_disk=True,
         )
 
         # ==========================================
-        # STAGE 2: DAMAGE DETECTION ON EACH CROP
+        # STAGE 2: DAMAGE DETECTION (STAGE 1 GATE ENFORCED)
         # ==========================================
-        logger.info(">>> STAGE 2: Running damage detection on each package crop...")
+        logger.info(">>> STAGE 2: Running damage detection on valid package crops...")
         package_evaluations = []
+        valid_count = 0
+        invalid_count = 0
         safe_count = 0
         inspect_count = 0
         replace_count = 0
@@ -199,69 +193,222 @@ class TwoStagePackageInspector:
             crop_bgr = crop_data["crop_bgr"]
             ch, cw = crop_bgr.shape[:2]
             pkg_id = crop_data["package_id"]
+            is_valid = crop_data["is_valid_package"]
+            area_ratio = crop_data.get("box_area_ratio", 0.0)
+            area_ratio_pct = crop_data.get("box_area_ratio_pct", "0.00%")
+            detector_conf = crop_data["detector_confidence"]
 
-            # Run damage detector
-            dmg_results = self.dmg_model.predict(
-                source=crop_bgr,
-                conf=self.damage_conf,
-                verbose=False,
-            )[0]
+            if is_valid:
+                valid_count += 1
+                # Run damage detector ONLY on valid crops
+                dmg_results = self.dmg_model.predict(
+                    source=crop_bgr,
+                    conf=self.damage_conf,
+                    verbose=False,
+                )[0]
 
-            dmg_boxes = []
-            dmg_classes = []
-            dmg_confs = []
+                dmg_boxes = []
+                dmg_classes = []
+                dmg_confs = []
 
-            if dmg_results.boxes is not None and len(dmg_results.boxes) > 0:
-                for dbox in dmg_results.boxes:
-                    d_xyxy = dbox.xyxy[0].cpu().numpy().tolist()
-                    d_cid = int(dbox.cls[0].item())
-                    d_cname = self.dmg_class_names.get(d_cid, f"damage_{d_cid}")
-                    d_conf = float(dbox.conf[0].item())
+                if dmg_results.boxes is not None and len(dmg_results.boxes) > 0:
+                    for dbox in dmg_results.boxes:
+                        d_xyxy = dbox.xyxy[0].cpu().numpy().tolist()
+                        d_cid = int(dbox.cls[0].item())
+                        d_cname = self.dmg_class_names.get(d_cid, f"damage_{d_cid}")
+                        d_conf = float(dbox.conf[0].item())
 
-                    dmg_boxes.append(d_xyxy)
-                    dmg_classes.append(d_cname)
-                    dmg_confs.append(d_conf)
+                        dmg_boxes.append(d_xyxy)
+                        dmg_classes.append(d_cname)
+                        dmg_confs.append(d_conf)
 
-            # Feature extraction on crop
-            defect_features = extract_defect_features(
-                boxes=dmg_boxes,
-                classes=dmg_classes,
-                confidences=dmg_confs,
-                image_shape=(ch, cw),
-            )
+                # Feature extraction on crop
+                defect_features = extract_defect_features(
+                    boxes=dmg_boxes,
+                    classes=dmg_classes,
+                    confidences=dmg_confs,
+                    image_shape=(ch, cw),
+                )
 
-            total_coverage = calculate_total_damage_coverage(dmg_boxes, (ch, cw))
-            severity_info = assess_damage_severity(defect_features, total_coverage)
-            risk_info = calculate_internal_damage_risk(severity_info, defect_features)
+                total_coverage = calculate_total_damage_coverage(dmg_boxes, (ch, cw))
+                severity_info = assess_damage_severity(defect_features, total_coverage)
+                risk_info = calculate_internal_damage_risk(severity_info, defect_features)
 
-            decision = risk_info["delivery_decision"]
-            if decision == "SAFE TO DELIVER":
-                safe_count += 1
-            elif decision == "INSPECT BEFORE DELIVERY":
-                inspect_count += 1
-            else:
-                replace_count += 1
+                decision = risk_info["delivery_decision"]
+                if decision == "SAFE TO DELIVER":
+                    safe_count += 1
+                elif decision == "INSPECT BEFORE DELIVERY":
+                    inspect_count += 1
+                else:
+                    replace_count += 1
 
-            pkg_eval = {
-                "package_id": pkg_id,
-                "detector_confidence": crop_data["detector_confidence"],
-                "original_bbox": crop_data["original_bbox"],
-                "crop_filename": crop_data["crop_filename"],
-                "crop_path": crop_data["crop_path"],
-                "defects_detected_count": len(defect_features),
-                "damage_classes_found": list({f["damage_class"] for f in defect_features}),
-                "defects": defect_features,
-                "severity_assessment": {
-                    "severity_level": severity_info["severity_level"],
-                    "total_coverage_percentage": f"{total_coverage * 100:.2f}%",
-                    "rationale": severity_info["rationale"],
-                },
-                "risk_prediction": {
-                    "risk_score": risk_info["risk_score"],
+                dmg_conf_display = "N/A" if len(defect_features) == 0 else [f"{d['damage_class']}: {d['confidence']:.2f}" for d in defect_features]
+
+                pkg_eval = {
+                    "package_id": pkg_id,
+                    "is_valid_package": True,
+                    "detection_status": "VALID_PACKAGE",
                     "delivery_decision": decision,
-                    "action_required": risk_info["decision_action"],
-                },
-            }
+                    "risk_score": risk_info["risk_score"],
+                    "risk_score_display": f"{risk_info['risk_score']:.0f} / 100",
+                    # STAGE 1: PACKAGE DETECTION
+                    "stage1_package_detection": {
+                        "package_id": pkg_id,
+                        "status": "VALID_PACKAGE",
+                        "package_detection_confidence": detector_conf,
+                        "bounding_box": crop_data["original_bbox"],
+                        "bounding_box_area_ratio": area_ratio,
+                        "bounding_box_area_ratio_pct": area_ratio_pct,
+                        "is_suspicious_crop": False,
+                        "warning": None,
+                    },
+                    # STAGE 2: DAMAGE DETECTION
+                    "stage2_damage_detection": {
+                        "status": "EVALUATED",
+                        "damage_detected": len(defect_features) > 0,
+                        "damage_detection_result": f"{len(defect_features)} defect(s) detected: {', '.join(list({f['damage_class'] for f in defect_features}))}" if defect_features else "No damage detected",
+                        "damage_classes_found": list({f["damage_class"] for f in defect_features}),
+                        "damage_confidence": dmg_conf_display,
+                        "defects_detected_count": len(defect_features),
+                        "defects": defect_features,
+                    },
+                    # STAGE 3: DAMAGE SEVERITY
+                    "stage3_damage_severity": {
+                        "status": "EVALUATED",
+                        "severity_level": severity_info["severity_level"],
+                        "damage_area_coverage": f"{total_coverage * 100:.2f}%",
+                        "total_coverage_ratio": total_coverage,
+                        "severity_score_normalized": severity_info.get("severity_score_normalized", 0.0),
+                        "rationale": severity_info["rationale"],
+                    },
+                    # STAGE 4: INTERNAL DAMAGE RISK
+                    "stage4_internal_damage_risk": {
+                        "status": "EVALUATED",
+                        "risk_metric_name": "Heuristic Estimated Internal Damage Risk Score",
+                        "heuristic_risk_score": risk_info["risk_score"],
+                        "risk_score_display": f"{risk_info['risk_score']:.0f} / 100",
+                        "score_scale": "0 - 100",
+                        "is_probability": False,
+                        "score_nature": "Heuristic estimated score based on external visual features, not calibrated probability.",
+                    },
+                    # STAGE 5: DELIVERY DECISION
+                    "stage5_delivery_decision": {
+                        "status": "RECOMMENDED",
+                        "recommended_delivery_decision": decision,
+                        "decision_type": "Model Recommendation",
+                        "action_required": risk_info["decision_action"],
+                        "justification": "Based on detected external condition and configured heuristic risk threshold.",
+                    },
+                    # Convenience aliases
+                    "detector_confidence": detector_conf,
+                    "original_bbox": crop_data["original_bbox"],
+                    "box_area_ratio_pct": area_ratio_pct,
+                    "is_suspicious_crop": False,
+                    "warning": None,
+                    "crop_filename": crop_data["crop_filename"],
+                    "crop_path": crop_data["crop_path"],
+                    "defects_detected_count": len(defect_features),
+                    "damage_classes_found": list({f["damage_class"] for f in defect_features}),
+                    "damage_confidence": dmg_conf_display,
+                    "defects": defect_features,
+                    "severity_assessment": {
+                        "severity_level": severity_info["severity_level"],
+                        "total_coverage_percentage": f"{total_coverage * 100:.2f}%",
+                        "rationale": severity_info["rationale"],
+                    },
+                    "risk_prediction": {
+                        "risk_score": risk_info["risk_score"],
+                        "delivery_decision": decision,
+                        "action_required": risk_info["decision_action"],
+                    },
+                }
+            else:
+                # STAGE 1 QUALITY GATE REJECTION: Bypass Stage 2-5 completely
+                invalid_count += 1
+                rejection_reason = crop_data.get("rejection_reason", "Detected region is too large to confidently represent an individual package.")
+                rejection_action = crop_data.get("rejection_action", "Capture a closer image containing the individual package or improve the package detection model.")
+                decision = "PACKAGE DETECTION REQUIRES REVIEW"
+
+                pkg_eval = {
+                    "package_id": pkg_id,
+                    "is_valid_package": False,
+                    "detection_status": "INVALID PACKAGE DETECTION",
+                    "delivery_decision": decision,
+                    "risk_score": None,
+                    "risk_score_display": "N/A",
+                    # STAGE 1: PACKAGE DETECTION
+                    "stage1_package_detection": {
+                        "package_id": pkg_id,
+                        "status": "INVALID_PACKAGE_DETECTION",
+                        "package_detection_confidence": detector_conf,
+                        "bounding_box": crop_data["original_bbox"],
+                        "bounding_box_area_ratio": area_ratio,
+                        "bounding_box_area_ratio_pct": area_ratio_pct,
+                        "is_suspicious_crop": True,
+                        "warning": crop_data.get("suspicious_warning"),
+                        "rejection_reason": rejection_reason,
+                        "rejection_action": rejection_action,
+                    },
+                    # STAGE 2: DAMAGE DETECTION (BYPASSED)
+                    "stage2_damage_detection": {
+                        "status": "SKIPPED_QUALITY_GATE",
+                        "damage_detected": None,
+                        "damage_detection_result": "Damage analysis was not performed because the package boundary could not be reliably established.",
+                        "damage_confidence": "N/A",
+                        "defects_detected_count": 0,
+                        "defects": [],
+                    },
+                    # STAGE 3: DAMAGE SEVERITY (BYPASSED)
+                    "stage3_damage_severity": {
+                        "status": "SKIPPED_QUALITY_GATE",
+                        "severity_level": "Not Evaluated",
+                        "damage_area_coverage": "N/A",
+                        "total_coverage_ratio": 0.0,
+                        "severity_score_normalized": 0.0,
+                        "rationale": "Damage severity evaluation skipped because Stage 1 package detection quality gate failed.",
+                    },
+                    # STAGE 4: INTERNAL DAMAGE RISK (BYPASSED)
+                    "stage4_internal_damage_risk": {
+                        "status": "SKIPPED_QUALITY_GATE",
+                        "risk_metric_name": "Heuristic Estimated Internal Damage Risk Score",
+                        "heuristic_risk_score": None,
+                        "risk_score_display": "N/A",
+                        "score_scale": "0 - 100",
+                        "is_probability": False,
+                        "score_nature": "Not evaluated (Stage 1 Quality Gate rejected).",
+                    },
+                    # STAGE 5: DELIVERY DECISION (BYPASSED)
+                    "stage5_delivery_decision": {
+                        "status": "QUALITY_GATE_REJECTED",
+                        "recommended_delivery_decision": decision,
+                        "decision_type": "Stage 1 Quality Gate Rejection",
+                        "action_required": rejection_action,
+                        "justification": "Stage 1 could not reliably isolate an individual package from the input image.",
+                    },
+                    # Convenience aliases
+                    "detector_confidence": detector_conf,
+                    "original_bbox": crop_data["original_bbox"],
+                    "box_area_ratio_pct": area_ratio_pct,
+                    "is_suspicious_crop": True,
+                    "warning": crop_data.get("suspicious_warning"),
+                    "crop_filename": crop_data["crop_filename"],
+                    "crop_path": crop_data["crop_path"],
+                    "defects_detected_count": 0,
+                    "damage_classes_found": [],
+                    "damage_confidence": "N/A",
+                    "defects": [],
+                    "severity_assessment": {
+                        "severity_level": "Not Evaluated",
+                        "total_coverage_percentage": "N/A",
+                        "rationale": "Damage analysis skipped due to Stage 1 Quality Gate rejection.",
+                    },
+                    "risk_prediction": {
+                        "risk_score": None,
+                        "delivery_decision": decision,
+                        "action_required": rejection_action,
+                    },
+                }
+
             package_evaluations.append(pkg_eval)
 
         # ==========================================
@@ -270,6 +417,8 @@ class TwoStagePackageInspector:
         final_annotated_img = self.draw_final_multi_package_overlay(
             img_bgr=img_bgr.copy(),
             package_evaluations=package_evaluations,
+            valid_count=valid_count,
+            invalid_count=invalid_count,
             safe_count=safe_count,
             inspect_count=inspect_count,
             replace_count=replace_count,
@@ -284,7 +433,8 @@ class TwoStagePackageInspector:
         # ==========================================
         full_report_data = {
             "header": {
-                "system_name": "Smart Two-Stage Multi-Package Damage & Risk Inspection System",
+                "system_name": "Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk Prediction System",
+                "inspection_type": "AI-Based External Condition Assessment & Heuristic Risk Prediction",
                 "timestamp": timestamp,
                 "source_image": image_name,
                 "final_annotated_image": str(final_img_path),
@@ -292,15 +442,23 @@ class TwoStagePackageInspector:
             },
             "summary": {
                 "total_packages_detected": len(package_evaluations),
+                "valid_packages_count": valid_count,
+                "invalid_packages_count": invalid_count,
                 "safe_to_deliver_count": safe_count,
                 "inspect_before_delivery_count": inspect_count,
                 "replace_package_count": replace_count,
+                "quality_gate_threshold_max_area_ratio": f"{max_package_area_ratio*100:.0f}%",
+                "decision_nature": "Model Recommendation based on observable external visual features",
             },
             "package_results": package_evaluations,
             "models_used": {
-                "package_detector": self.pkg_model_path.name,
-                "damage_detector": self.dmg_model_path.name,
+                "stage1_package_detector": self.pkg_model_path.name,
+                "stage2_damage_detector": self.dmg_model_path.name,
             },
+            "disclaimer": (
+                "The delivery decision is a model recommendation derived from camera-observable external visual features "
+                "and heuristic risk scoring (0-100). The system does not inspect internal package cushioning directly."
+            ),
         }
 
         # Save JSON Report
@@ -310,36 +468,64 @@ class TwoStagePackageInspector:
         # Save TXT Report
         txt_lines = [
             "=" * 75,
-            "           MULTI-PACKAGE DAMAGE INSPECTION & RISK REPORT",
+            "     AI-BASED EXTERNAL CONDITION & MULTI-PACKAGE DAMAGE INSPECTION REPORT",
             "=" * 75,
             f"Image Analyzed        : {image_name}",
             f"Inspection Date/Time  : {timestamp}",
             f"Total Packages Found  : {len(package_evaluations)}",
-            f"  - Safe to Deliver   : {safe_count}",
-            f"  - Inspect Before Del: {inspect_count}",
-            f"  - Replace Package   : {replace_count}",
+            f"  - Valid Packages    : {valid_count}",
+            f"  - Invalid Detections: {invalid_count}",
+            f"  - Recommended Safe  : {safe_count}",
+            f"  - Recom. Inspection : {inspect_count}",
+            f"  - Recom. Replacement: {replace_count}",
             "-" * 75,
-            "INDIVIDUAL PACKAGE BREAKDOWN:",
+            "INDIVIDUAL PACKAGE FIVE-STAGE BREAKDOWN:",
             "-" * 75,
         ]
 
         for p in package_evaluations:
-            sev = p["severity_assessment"]["severity_level"]
-            risk = p["risk_prediction"]["risk_score"]
-            dec = p["risk_prediction"]["delivery_decision"]
-            dmgs = ", ".join(p["damage_classes_found"]) if p["damage_classes_found"] else "None"
+            s1 = p["stage1_package_detection"]
+            s2 = p["stage2_damage_detection"]
+            s3 = p["stage3_damage_severity"]
+            s4 = p["stage4_internal_damage_risk"]
+            s5 = p["stage5_delivery_decision"]
 
             txt_lines.extend([
-                f"[{p['package_id']}]",
-                f"  Bounding Box    : {p['original_bbox']} (Conf: {p['detector_confidence']:.2f})",
-                f"  Crop Image Path : {p['crop_path']}",
-                f"  Damage Detected : {dmgs} ({p['defects_detected_count']} defects)",
-                f"  Damage Severity : {sev} ({p['severity_assessment']['total_coverage_percentage']} coverage)",
-                f"  Internal Risk   : {risk} / 100",
-                f"  DELIVERY DECISION: >>> {dec} <<<",
-                f"  Action Required : {p['risk_prediction']['action_required']}",
-                "",
+                f"[{p['package_id']}] Status: {p['detection_status']}",
+                f"  STAGE 1 - PACKAGE DETECTION:",
+                f"    Package Detection Confidence : {s1['package_detection_confidence']:.2f}",
+                f"    Bounding Box                 : {s1['bounding_box']} (Area Ratio: {s1['bounding_box_area_ratio_pct']})",
+                f"    Quality Gate Status          : {'VALID' if p['is_valid_package'] else 'REJECTED (Oversized Detection)'}",
+                f"    Crop Image Path              : {p['crop_path']}",
             ])
+
+            if p["is_valid_package"]:
+                txt_lines.extend([
+                    f"  STAGE 2 - DAMAGE DETECTION:",
+                    f"    Damage Detection Result      : {s2['damage_detection_result']}",
+                    f"    Damage Confidence            : {s2['damage_confidence']}",
+                    f"  STAGE 3 - DAMAGE SEVERITY:",
+                    f"    Severity Level               : {s3['severity_level']} (Damage Coverage: {s3['damage_area_coverage']})",
+                    f"    Severity Rationale           : {s3['rationale']}",
+                    f"  STAGE 4 - INTERNAL DAMAGE RISK:",
+                    f"    Heuristic Risk Score         : {s4['heuristic_risk_score']} / 100 ({s4['score_nature']})",
+                    f"  STAGE 5 - DELIVERY DECISION:",
+                    f"    Recommended Delivery Decision: >>> {s5['recommended_delivery_decision']} <<<",
+                    f"    Action Required              : {s5['action_required']}",
+                ])
+            else:
+                txt_lines.extend([
+                    f"  STAGE 2 - DAMAGE DETECTION:",
+                    f"    Damage Detection Result      : {s2['damage_detection_result']}",
+                    f"  STAGE 3 - DAMAGE SEVERITY:",
+                    f"    Severity Level               : {s3['severity_level']}",
+                    f"  STAGE 4 - INTERNAL DAMAGE RISK:",
+                    f"    Heuristic Risk Score         : {s4['risk_score_display']}",
+                    f"  STAGE 5 - DELIVERY DECISION:",
+                    f"    Recommended Action           : >>> {s5['recommended_delivery_decision']} <<<",
+                    f"    Action Required              : {s5['action_required']}",
+                ])
+            txt_lines.append("")
 
         txt_lines.append("=" * 75)
         txt_report_path = REPORTS_OUTPUT_DIR / "multi_package_inspection.txt"
@@ -349,6 +535,8 @@ class TwoStagePackageInspector:
 
         return {
             "total_packages": len(package_evaluations),
+            "valid_count": valid_count,
+            "invalid_count": invalid_count,
             "safe_count": safe_count,
             "inspect_count": inspect_count,
             "replace_count": replace_count,
@@ -363,6 +551,8 @@ class TwoStagePackageInspector:
         self,
         img_bgr: np.ndarray,
         package_evaluations: List[Dict[str, Any]],
+        valid_count: int,
+        invalid_count: int,
         safe_count: int,
         inspect_count: int,
         replace_count: int,
@@ -377,30 +567,37 @@ class TwoStagePackageInspector:
             "SAFE TO DELIVER": (0, 180, 0),        # Green
             "INSPECT BEFORE DELIVERY": (0, 165, 255),  # Amber
             "REPLACE PACKAGE": (0, 0, 220),       # Red
+            "PACKAGE DETECTION REQUIRES REVIEW": (0, 140, 255),  # Orange
         }
         badge_tags = {
             "SAFE TO DELIVER": "SAFE",
             "INSPECT BEFORE DELIVERY": "INSPECT",
             "REPLACE PACKAGE": "REPLACE",
+            "PACKAGE DETECTION REQUIRES REVIEW": "REVIEW",
         }
 
         # Draw package boxes
         for p in package_evaluations:
             x1, y1, x2, y2 = [int(v) for v in p["original_bbox"]]
-            decision = p["risk_prediction"]["delivery_decision"]
-            color = badge_colors.get(decision, (0, 180, 0))
-            tag = badge_tags.get(decision, "SAFE")
+            is_valid = p.get("is_valid_package", True)
+            decision = p["delivery_decision"]
+            color = badge_colors.get(decision, (0, 140, 255) if not is_valid else (0, 180, 0))
+            tag = badge_tags.get(decision, "REVIEW" if not is_valid else "SAFE")
             pkg_id = p["package_id"]
-            risk = p["risk_prediction"]["risk_score"]
-            dmgs = p["damage_classes_found"]
+            dmgs = p.get("damage_classes_found", [])
+            area_pct = p.get("box_area_ratio_pct", "0.00%")
 
             # Package bounding box
             cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 2)
 
             # Badge banner text
-            if dmgs:
+            if not is_valid:
+                banner_text = f"{pkg_id}: INVALID / OVERSIZED ({area_pct})"
+            elif dmgs:
+                risk = p["risk_prediction"]["risk_score"]
                 banner_text = f"{pkg_id}: {tag} [{', '.join(dmgs)}] ({risk:.0f}pts)"
             else:
+                risk = p["risk_prediction"]["risk_score"]
                 banner_text = f"{pkg_id}: {tag} (Risk {risk:.0f})"
 
             font_scale = max(0.42, min(0.65, img_w / 1400))
@@ -428,7 +625,8 @@ class TwoStagePackageInspector:
         cv2.addWeighted(overlay, 0.85, canvas, 0.15, 0, canvas)
 
         header_line = (
-            f"AI MULTI-PACKAGE INSPECTOR | Detected: {len(package_evaluations)} | "
+            f"AI MULTI-PACKAGE INSPECTOR | Found: {len(package_evaluations)} | "
+            f"Valid: {valid_count} | Invalid: {invalid_count} | "
             f"Safe: {safe_count} | Inspect: {inspect_count} | Replace: {replace_count}"
         )
         font_scale = max(0.45, min(0.70, img_w / 1100))

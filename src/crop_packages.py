@@ -28,11 +28,13 @@ def crop_individual_packages(
     package_boxes: List[List[float]],
     confidences: Optional[List[float]] = None,
     margin_pct: float = 0.05,
+    max_package_area_ratio: float = 0.80,
     output_dir: Optional[Path] = None,
     save_to_disk: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Crops every detected package separately with a margin, clamped to image dimensions.
+    Applies Stage 1 Quality Gate validation based on MAX_PACKAGE_AREA_RATIO.
     
     Returns list of dicts with:
     - package_id: 'Package 1', 'Package 2', ...
@@ -42,6 +44,9 @@ def crop_individual_packages(
     - original_bbox: [x1, y1, x2, y2]
     - crop_bbox: [cx1, cy1, cx2, cy2] (including margin)
     - confidence: float
+    - is_valid_package: bool
+    - box_area_ratio: float
+    - status: 'VALID_PACKAGE' or 'INVALID_PACKAGE_DETECTION'
     """
     if output_dir is None:
         output_dir = PACKAGE_CROPS_DIR
@@ -96,12 +101,19 @@ def crop_individual_packages(
         img_area = float(img_w * img_h)
         area_ratio = box_area / max(1.0, img_area)
 
-        # Flag unusually large boxes covering almost entire image
-        is_suspicious_full_scene = area_ratio > 0.80
+        # STAGE 1 QUALITY GATE: Flag and reject oversized detections
+        is_suspicious_full_scene = area_ratio > max_package_area_ratio
+        is_valid_package = not is_suspicious_full_scene
+        warning_msg = None
+        rejection_reason = None
+        rejection_action = None
+
         if is_suspicious_full_scene:
+            warning_msg = "WARNING: Detected region is too large to confidently represent an individual package."
+            rejection_reason = "Detected region is too large to confidently represent an individual package."
+            rejection_action = "Capture a closer image containing the individual package or improve the package detection model."
             logger.warning(
-                f"WARNING: Package {i+1} bounding box area ratio is {area_ratio*100:.1f}%. "
-                f"Detection likely represents the entire scene rather than an individual package."
+                f"{warning_msg} Package {i+1} bounding box area ratio is {area_ratio*100:.2f}% (Threshold: {max_package_area_ratio*100:.0f}%)."
             )
 
         conf = confidences[i] if confidences and i < len(confidences) else 1.0
@@ -116,8 +128,14 @@ def crop_individual_packages(
             "crop_bbox_clamped": [cx1, cy1, cx2, cy2],
             "crop_width": cx2 - cx1,
             "crop_height": cy2 - cy1,
+            "box_area_ratio": round(area_ratio, 4),
             "box_area_ratio_pct": f"{area_ratio * 100:.2f}%",
+            "is_valid_package": is_valid_package,
+            "detection_status": "VALID_PACKAGE" if is_valid_package else "INVALID PACKAGE DETECTION",
             "is_suspicious_full_scene": is_suspicious_full_scene,
+            "suspicious_warning": warning_msg,
+            "rejection_reason": rejection_reason,
+            "rejection_action": rejection_action,
             "detector_confidence": round(float(conf), 4),
         })
 
