@@ -1,0 +1,49 @@
+===========================================================================
+           MULTI-PACKAGE DAMAGE INSPECTION & RISK REPORT
+===========================================================================
+Image Analyzed        : multi_parcel_01.jpg
+Inspection Date/Time  : 2026-10-05 01:56:16
+Total Packages Found  : 4
+  - Safe to Deliver   : 4
+  - Inspect Before Del: 0
+  - Replace Package   : 0
+---------------------------------------------------------------------------
+INDIVIDUAL PACKAGE BREAKDOWN:
+---------------------------------------------------------------------------
+[Package 1]
+  Bounding Box    : [35.4, 258.4, 229.7, 427.5] (Conf: 0.96)
+  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_001.jpg
+  Damage Detected : None (0 defects)
+  Damage Severity : No Damage (0.00% coverage)
+  Internal Risk   : 0.0 / 100
+  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
+  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
+
+[Package 2]
+  Bounding Box    : [212.9, 65.8, 316.5, 145.0] (Conf: 0.92)
+  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_002.jpg
+  Damage Detected : None (0 defects)
+  Damage Severity : No Damage (0.00% coverage)
+  Internal Risk   : 0.0 / 100
+  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
+  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
+
+[Package 3]
+  Bounding Box    : [313.3, 309.7, 396.5, 372.6] (Conf: 0.90)
+  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_003.jpg
+  Damage Detected : None (0 defects)
+  Damage Severity : No Damage (0.00% coverage)
+  Internal Risk   : 0.0 / 100
+  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
+  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
+
+[Package 4]
+  Bounding Box    : [81.3, 72.2, 176.0, 151.5] (Conf: 0.87)
+  Crop Image Path : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_004.jpg
+  Damage Detected : None (0 defects)
+  Damage Severity : No Damage (0.00% coverage)
+  Internal Risk   : 0.0 / 100
+  DELIVERY DECISION: >>> SAFE TO DELIVER <<<
+  Action Required : Package package appears structurally sound with no external defects. Safe for direct customer delivery.
+
+===========================================================================

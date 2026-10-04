@@ -1,0 +1,121 @@
+{
+  "header": {
+    "system_name": "Smart Two-Stage Multi-Package Damage & Risk Inspection System",
+    "timestamp": "2026-10-05 01:56:16",
+    "source_image": "multi_parcel_01.jpg",
+    "final_annotated_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\final\\multi_package_final_result.jpg",
+    "stage1_detection_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_detector\\multi_package_detection.jpg"
+  },
+  "summary": {
+    "total_packages_detected": 4,
+    "safe_to_deliver_count": 4,
+    "inspect_before_delivery_count": 0,
+    "replace_package_count": 0
+  },
+  "package_results": [
+    {
+      "package_id": "Package 1",
+      "detector_confidence": 0.9604,
+      "original_bbox": [
+        35.4,
+        258.4,
+        229.7,
+        427.5
+      ],
+      "crop_filename": "package_001.jpg",
+      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_001.jpg",
+      "defects_detected_count": 0,
+      "damage_classes_found": [],
+      "defects": [],
+      "severity_assessment": {
+        "severity_level": "No Damage",
+        "total_coverage_percentage": "0.00%",
+        "rationale": "No structural or surface defects detected on external package packaging."
+      },
+      "risk_prediction": {
+        "risk_score": 0.0,
+        "delivery_decision": "SAFE TO DELIVER",
+        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+      }
+    },
+    {
+      "package_id": "Package 2",
+      "detector_confidence": 0.9205,
+      "original_bbox": [
+        212.9,
+        65.8,
+        316.5,
+        145.0
+      ],
+      "crop_filename": "package_002.jpg",
+      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_002.jpg",
+      "defects_detected_count": 0,
+      "damage_classes_found": [],
+      "defects": [],
+      "severity_assessment": {
+        "severity_level": "No Damage",
+        "total_coverage_percentage": "0.00%",
+        "rationale": "No structural or surface defects detected on external package packaging."
+      },
+      "risk_prediction": {
+        "risk_score": 0.0,
+        "delivery_decision": "SAFE TO DELIVER",
+        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+      }
+    },
+    {
+      "package_id": "Package 3",
+      "detector_confidence": 0.9037,
+      "original_bbox": [
+        313.3,
+        309.7,
+        396.5,
+        372.6
+      ],
+      "crop_filename": "package_003.jpg",
+      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_003.jpg",
+      "defects_detected_count": 0,
+      "damage_classes_found": [],
+      "defects": [],
+      "severity_assessment": {
+        "severity_level": "No Damage",
+        "total_coverage_percentage": "0.00%",
+        "rationale": "No structural or surface defects detected on external package packaging."
+      },
+      "risk_prediction": {
+        "risk_score": 0.0,
+        "delivery_decision": "SAFE TO DELIVER",
+        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+      }
+    },
+    {
+      "package_id": "Package 4",
+      "detector_confidence": 0.8738,
+      "original_bbox": [
+        81.3,
+        72.2,
+        176.0,
+        151.5
+      ],
+      "crop_filename": "package_004.jpg",
+      "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_004.jpg",
+      "defects_detected_count": 0,
+      "damage_classes_found": [],
+      "defects": [],
+      "severity_assessment": {
+        "severity_level": "No Damage",
+        "total_coverage_percentage": "0.00%",
+        "rationale": "No structural or surface defects detected on external package packaging."
+      },
+      "risk_prediction": {
+        "risk_score": 0.0,
+        "delivery_decision": "SAFE TO DELIVER",
+        "action_required": "Package package appears structurally sound with no external defects. Safe for direct customer delivery."
+      }
+    }
+  ],
+  "models_used": {
+    "package_detector": "package_detector_best.pt",
+    "damage_detector": "damage_detector_best.pt"
+  }
+}

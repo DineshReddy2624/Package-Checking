@@ -1,0 +1,14 @@
+======================================================================
+STAGE 1 INDIVIDUAL PACKAGE DETECTOR VALIDATION REPORT
+======================================================================
+Model Weight Path    : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\models\weights\package_detector_best.pt
+Evaluation Split     : val
+----------------------------------------------------------------------
+ACTUAL PERFORMANCE METRICS:
+  - Precision (B)    : 0.9346
+  - Recall (B)       : 0.9848
+  - mAP@0.50 (B)     : 0.9823
+  - mAP@0.50:0.95 (B): 0.886
+----------------------------------------------------------------------
+Inference Latency    : 45.21226944436623 ms / image
+======================================================================
