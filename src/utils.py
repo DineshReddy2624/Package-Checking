@@ -109,6 +109,14 @@ def save_json(data: Any, filepath: Path) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def load_json(filepath: Path) -> Any:
+    """Safely loads data from a JSON file."""
+    if not filepath.exists():
+        return {}
+    with open(filepath, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def save_text(text: str, filepath: Path) -> None:
     """Safely saves text to a file."""
     filepath.parent.mkdir(parents=True, exist_ok=True)
