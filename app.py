@@ -1,7 +1,6 @@
 """
-Streamlit Web Application Interface.
 Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk Prediction System.
-Two-Stage Computer Vision & Intelligent Risk Assessment Pipeline.
+Interactive Streamlit Application with Auto-Detection, Two-Stage Vision Pipeline, and LLM Logistics Advisor.
 """
 
 import os
@@ -30,85 +29,100 @@ from src.utils import (
 )
 from src.multi_package_pipeline import TwoStagePackageInspector
 from src.inference import PackageDamagePredictor
-from src.crop_packages import crop_individual_packages
+from src.llm_advisor import generate_llm_inspection_notes
 
-# Page configuration
+# Streamlit Page Setup
 st.set_page_config(
-    page_title="AI Package Damage & Risk Prediction",
+    page_title="AI Package Damage & Risk Advisor",
     page_icon="📦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS for modern styling
+# Custom Glassmorphic & Modern Styling
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
-    .main-title {
-        font-size: 2.1rem;
+    .hero-header {
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+    
+    .hero-title {
+        font-size: 2.2rem;
         font-weight: 800;
-        background: linear-gradient(90deg, #3b82f6, #10b981);
+        background: linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #a78bfa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0.2rem;
+        margin: 0;
     }
     
-    .sub-title {
-        font-size: 1.05rem;
+    .hero-sub {
         color: #94a3b8;
-        margin-bottom: 1.2rem;
+        font-size: 1rem;
+        margin-top: 0.4rem;
     }
     
-    .status-card {
-        padding: 1.1rem;
-        border-radius: 12px;
-        background: #1e293b;
-        border: 1px solid #334155;
-        margin-bottom: 1rem;
+    .llm-card {
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 14px;
+        padding: 1.4rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    }
+    
+    .llm-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #60a5fa;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.8rem;
     }
     
     .badge-safe {
-        background-color: #065f46;
-        color: #34d399;
-        padding: 4px 10px;
-        border-radius: 6px;
+        background: linear-gradient(90deg, #059669, #10b981);
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
         display: inline-block;
+        letter-spacing: 0.5px;
     }
     
     .badge-inspect {
-        background-color: #78350f;
-        color: #fbbf24;
-        padding: 4px 10px;
-        border-radius: 6px;
+        background: linear-gradient(90deg, #d97706, #f59e0b);
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
         display: inline-block;
+        letter-spacing: 0.5px;
     }
     
     .badge-replace {
-        background-color: #7f1d1d;
-        color: #f87171;
-        padding: 4px 10px;
-        border-radius: 6px;
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+        color: #ffffff;
+        padding: 6px 14px;
+        border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
         display: inline-block;
-    }
-    
-    .crop-card {
-        background: #0f172a;
-        border: 1px solid #1e293b;
-        border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 12px;
+        letter-spacing: 0.5px;
     }
     </style>
     """,
@@ -117,11 +131,10 @@ st.markdown(
 
 
 @st.cache_resource
-def load_inspectors(pkg_conf: float, dmg_conf: float):
+def load_vision_engines(pkg_conf: float, dmg_conf: float):
     """
-    Caches model loading for high inference performance.
+    Loads Stage 1 Package Detector and Stage 2 Damage Detector with caching.
     """
-    # Locate package detector weights
     pkg_candidates = [
         WEIGHTS_DIR / "package_detector_best.pt",
         RUNS_DIR / "train" / "package_detector_run" / "weights" / "best.pt",
@@ -129,7 +142,6 @@ def load_inspectors(pkg_conf: float, dmg_conf: float):
     ]
     pkg_path = next((p for p in pkg_candidates if p.exists()), None)
 
-    # Locate damage detector weights
     dmg_candidates = [
         WEIGHTS_DIR / "damage_detector_best.pt",
         WEIGHTS_DIR / "best.pt",
@@ -137,8 +149,6 @@ def load_inspectors(pkg_conf: float, dmg_conf: float):
     dmg_path = next((p for p in dmg_candidates if p.exists()), None)
 
     two_stage = None
-    single_stage = None
-
     if pkg_path and dmg_path:
         two_stage = TwoStagePackageInspector(
             package_detector_path=pkg_path,
@@ -147,346 +157,231 @@ def load_inspectors(pkg_conf: float, dmg_conf: float):
             damage_conf=dmg_conf,
         )
 
-    if dmg_path:
-        single_stage = PackageDamagePredictor(
-            model_path=dmg_path,
-            conf_threshold=dmg_conf,
-        )
-
-    return two_stage, single_stage, pkg_path, dmg_path
+    return two_stage, pkg_path, dmg_path
 
 
 def main():
-    # Header
-    st.markdown('<div class="main-title">📦 Smart AI Package Damage & Risk Prediction System</div>', unsafe_allow_html=True)
+    # Hero Banner
     st.markdown(
-        '<div class="sub-title">Two-Stage Computer Vision Pipeline: Stage 1 Individual Package Isolation & Stage 2 Deep Defect Analysis</div>',
+        """
+        <div class="hero-header">
+            <div class="hero-title">📦 Smart AI Package Damage & Risk Advisor</div>
+            <div class="hero-sub">Auto-Detecting Computer Vision Pipeline with LLM-Powered Quality & Logistics Reasoning</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
-    # Hardware detection
     hw_info = detect_hardware()
 
-    # Sidebar
+    # Sidebar Controls
     with st.sidebar:
-        st.header("⚙️ Pipeline Configuration")
-        st.caption(f"Hardware: **{hw_info['recommended_device'].upper()}** | PyTorch: **{hw_info['pytorch_version']}**")
+        st.header("⚡ System & Model Control")
+        st.caption(f"Device: **{hw_info['recommended_device'].upper()}** | PyTorch: **{hw_info['pytorch_version']}**")
 
-        st.subheader("Confidence Thresholds")
-        pkg_conf = st.slider("Stage 1 Package Detector Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
-        dmg_conf = st.slider("Stage 2 Damage Detector Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
-        crop_margin = st.slider("Package Crop Margin (%)", min_value=0, max_value=15, value=5, step=1) / 100.0
+        st.subheader("🤖 LLM Reasoning Engine")
+        llm_provider = st.selectbox("LLM Provider", ["Google Gemini (Recommended)", "OpenAI GPT-4o", "Built-in Expert Reasoning"])
+        api_key_input = st.text_input("API Key (Optional)", type="password", help="Leave blank to use built-in Expert Logistics Reasoning Engine")
+
+        st.divider()
+        st.subheader("🎯 Vision Sensitivity")
+        pkg_conf = st.slider("Package Detection Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
+        dmg_conf = st.slider("Damage Defect Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
+        crop_margin = st.slider("Crop Margin (%)", min_value=0, max_value=15, value=5, step=1) / 100.0
 
         st.divider()
         st.subheader("Model Status")
-        two_stage_engine, single_stage_engine, pkg_path, dmg_path = load_inspectors(pkg_conf, dmg_conf)
-
+        two_stage_engine, pkg_path, dmg_path = load_vision_engines(pkg_conf, dmg_conf)
         if pkg_path:
             st.success(f"Stage 1 Detector: `{pkg_path.name}`")
-        else:
-            st.warning("Stage 1 Detector: Training in progress...")
-
         if dmg_path:
             st.success(f"Stage 2 Damage Model: `{dmg_path.name}`")
-        else:
-            st.error("Stage 2 Damage Model: Not Found")
 
-        st.divider()
-        st.subheader("Delivery Decision Rules")
-        st.markdown(
-            """
-            - 🟢 **Risk < 25**: `SAFE TO DELIVER`
-            - 🟡 **Risk 25 – 65**: `INSPECT BEFORE DELIVERY`
-            - 🔴 **Risk > 65**: `REPLACE PACKAGE`
-            """
+    # Main Area: Auto-Detection
+    st.subheader("📥 Input Package or Warehouse Scene")
+    input_col1, input_col2 = st.columns([1, 1])
+
+    with input_col1:
+        uploaded_file = st.file_uploader(
+            "Upload any image (Single package or multi-package warehouse scene)",
+            type=["jpg", "jpeg", "png", "webp"],
+            help="The system will automatically isolate each package, inspect for defects, and generate LLM quality notes.",
         )
 
-    # Main Tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🏢 Multi-Package Scene (Two-Stage)",
-        "📦 Single Parcel Deep Inspection",
-        "📁 Sample Gallery & Quick Tests",
-        "📊 Model Analytics & Metrics",
-    ])
+    with input_col2:
+        # Aggregate all sample images
+        all_samples = []
+        for sdir in [SAMPLE_IMAGES_DIR / "multiple_parcels", SAMPLE_IMAGES_DIR / "single_parcel", SAMPLE_IMAGES_DIR]:
+            if sdir.exists():
+                all_samples.extend([f for f in sdir.glob("*.jpg") if f.is_file()])
+        # Deduplicate
+        unique_samples = {f.name: f for f in all_samples}
+        sample_choice = st.selectbox(
+            "Or pick a pre-loaded test image:",
+            ["None"] + sorted(list(unique_samples.keys())),
+        )
 
-    # =========================================================================
-    # TAB 1: MULTI-PACKAGE SCENE INSPECTION
-    # =========================================================================
-    with tab1:
-        st.subheader("Multi-Package Warehouse / Pallet Scene Inspection")
-        st.caption("Stage 1 detects each package separately. Stage 2 executes defect detection on each crop.")
+    # Resolve image
+    input_image_bgr = None
+    image_source_name = "custom_upload.jpg"
 
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            multi_upload = st.file_uploader(
-                "Upload Scene Image (Warehouse / Pallet / Conveyor)",
-                type=["jpg", "jpeg", "png", "webp"],
-                key="multi_upload",
+    if uploaded_file is not None:
+        file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
+        input_image_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+        image_source_name = uploaded_file.name
+    elif sample_choice != "None":
+        selected_path = unique_samples[sample_choice]
+        input_image_bgr = cv2.imread(str(selected_path))
+        image_source_name = selected_path.name
+
+    # Auto-Execute Pipeline
+    if input_image_bgr is not None:
+        if two_stage_engine is None:
+            st.error("Vision models are loading or not initialized yet.")
+            return
+
+        with st.spinner("🤖 Auto-Detecting Packages, Analyzing Damage, & Generating LLM Insights..."):
+            start_time = time.time()
+            results = two_stage_engine.inspect_scene(
+                image_input=input_image_bgr,
+                crop_margin_pct=crop_margin,
             )
-        with col2:
-            multi_sample_dir = SAMPLE_IMAGES_DIR / "multiple_parcels"
-            multi_samples = list(multi_sample_dir.glob("*.jpg")) if multi_sample_dir.exists() else []
-            sample_options = ["None"] + [s.name for s in multi_samples]
-            selected_multi_sample = st.selectbox("Or choose a pre-loaded multi-package sample:", sample_options)
+            elapsed_time = (time.time() - start_time) * 1000
 
-        target_multi_image = None
-        if multi_upload:
-            img_bytes = multi_upload.read()
-            nparr = np.frombuffer(img_bytes, np.uint8)
-            target_multi_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        elif selected_multi_sample != "None":
-            target_multi_image = cv2.imread(str(multi_sample_dir / selected_multi_sample))
-
-        if target_multi_image is not None:
-            st.divider()
-            run_btn = st.button("🚀 Run Two-Stage Multi-Package Inspection", type="primary", use_container_width=True)
-
-            if run_btn:
-                if two_stage_engine is None:
-                    st.error("Two-Stage Pipeline models are not fully initialized yet. Please verify weights.")
-                else:
-                    with st.spinner("Executing Stage 1 Package Isolation + Stage 2 Defect Scoring..."):
-                        start_t = time.time()
-                        results = two_stage_engine.inspect_scene(
-                            image_input=target_multi_image,
-                            crop_margin_pct=crop_margin,
-                        )
-                        elapsed_ms = (time.time() - start_t) * 1000
-
-                    st.success(f"Inspection Completed in {elapsed_ms:.1f} ms!")
-
-                    # Top KPI Summary Cards
-                    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-                    kpi1.metric("📦 Packages Isolated", results["total_packages"])
-                    kpi2.metric("🟢 Safe to Deliver", results["safe_count"])
-                    kpi3.metric("🟡 Inspect Before Delivery", results["inspect_count"])
-                    kpi4.metric("🔴 Replace Package", results["replace_count"])
-
-                    st.divider()
-
-                    # Side-by-Side Visual Comparison
-                    st.subheader("🖼️ Visual Pipeline Progression")
-                    vis_col1, vis_col2 = st.columns(2)
-
-                    with vis_col1:
-                        st.markdown("**Stage 1: Individual Package Isolation**")
-                        stage1_bgr = cv2.imread(results["stage1_image_path"])
-                        st.image(cv2.cvtColor(stage1_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
-
-                    with vis_col2:
-                        st.markdown("**Final Result: Multi-Package Delivery Decision Badges**")
-                        final_bgr = cv2.imread(results["final_image_path"])
-                        st.image(cv2.cvtColor(final_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
-
-                    st.divider()
-
-                    # Individual Package Breakdown Gallery
-                    st.subheader("🔎 Individual Package Deep Dive")
-                    evals = results["package_evaluations"]
-
-                    for p in evals:
-                        pkg_id = p["package_id"]
-                        decision = p["risk_prediction"]["delivery_decision"]
-                        risk_score = p["risk_prediction"]["risk_score"]
-                        sev_level = p["severity_assessment"]["severity_level"]
-                        cov_pct = p["severity_assessment"]["total_coverage_percentage"]
-                        dmgs = p["damage_classes_found"]
-
-                        with st.expander(f"📦 {pkg_id}  —  {decision} (Risk: {risk_score:.0f}/100)", expanded=True):
-                            c_left, c_right = st.columns([1, 2])
-
-                            with c_left:
-                                if Path(p["crop_path"]).exists():
-                                    crop_img = Image.open(p["crop_path"])
-                                    st.image(crop_img, caption=f"{pkg_id} Crop ({p['crop_filename']})", use_container_width=True)
-
-                            with c_right:
-                                # Status Badge
-                                if decision == "SAFE TO DELIVER":
-                                    st.markdown(f'<span class="badge-safe">🟢 {decision}</span>', unsafe_allow_html=True)
-                                elif decision == "INSPECT BEFORE DELIVERY":
-                                    st.markdown(f'<span class="badge-inspect">🟡 {decision}</span>', unsafe_allow_html=True)
-                                else:
-                                    st.markdown(f'<span class="badge-replace">🔴 {decision}</span>', unsafe_allow_html=True)
-
-                                st.markdown(f"**Action Required**: {p['risk_prediction']['action_required']}")
-                                st.progress(min(1.0, risk_score / 100.0), text=f"Estimated Internal Damage Risk: {risk_score:.0f} / 100")
-
-                                st.markdown(
-                                    f"""
-                                    - **Damage Detected**: {', '.join(dmgs) if dmgs else 'None (Clean)'} ({p['defects_detected_count']} defects)
-                                    - **Severity Level**: `{sev_level}` (Damage Area Coverage: `{cov_pct}`)
-                                    - **Stage 1 Detector Confidence**: `{p['detector_confidence']:.2f}`
-                                    - **Bounding Box**: `{p['original_bbox']}`
-                                    - **Severity Rationale**: {p['severity_assessment']['rationale']}
-                                    """
-                                )
-
-                    # Download Inspection Reports
-                    st.divider()
-                    st.subheader("📥 Export Inspection Reports")
-                    d_col1, d_col2 = st.columns(2)
-                    with d_col1:
-                        if Path(results["json_report_path"]).exists():
-                            with open(results["json_report_path"], "r") as f:
-                                json_bytes = f.read()
-                            st.download_button(
-                                label="Download Structured JSON Report",
-                                data=json_bytes,
-                                file_name="multi_package_inspection.json",
-                                mime="application/json",
-                                use_container_width=True,
-                            )
-                    with d_col2:
-                        if Path(results["txt_report_path"]).exists():
-                            with open(results["txt_report_path"], "r") as f:
-                                txt_bytes = f.read()
-                            st.download_button(
-                                label="Download Human-Readable TXT Report",
-                                data=txt_bytes,
-                                file_name="multi_package_inspection.txt",
-                                mime="text/plain",
-                                use_container_width=True,
-                            )
-
-    # =========================================================================
-    # TAB 2: SINGLE PARCEL DEEP INSPECTION
-    # =========================================================================
-    with tab2:
-        st.subheader("Single Parcel Direct Damage & Risk Inspection")
-        st.caption("High-resolution damage defect localization, geometric area analysis, and internal risk calculation.")
-
-        s_col1, s_col2 = st.columns([1, 1])
-        with s_col1:
-            single_upload = st.file_uploader(
-                "Upload Single Package Image",
-                type=["jpg", "jpeg", "png", "webp"],
-                key="single_upload",
+            # Generate LLM Logistics Notes
+            provider_code = "gemini" if "Gemini" in llm_provider else ("openai" if "OpenAI" in llm_provider else "expert")
+            llm_notes = generate_llm_inspection_notes(
+                inspection_data=results,
+                api_key=api_key_input if api_key_input.strip() else None,
+                provider=provider_code,
             )
-        with s_col2:
-            single_sample_dir = SAMPLE_IMAGES_DIR / "single_parcel"
-            single_samples = list(single_sample_dir.glob("*.jpg")) if single_sample_dir.exists() else []
-            single_sample_options = ["None"] + [s.name for s in single_samples]
-            selected_single_sample = st.selectbox("Or choose a pre-loaded single parcel sample:", single_sample_options)
 
-        target_single_image = None
-        if single_upload:
-            s_bytes = single_upload.read()
-            nparr = np.frombuffer(s_bytes, np.uint8)
-            target_single_image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        elif selected_single_sample != "None":
-            target_single_image = cv2.imread(str(single_sample_dir / selected_single_sample))
+        # -------------------------------------------------------------
+        # 1. TOP KPI STATUS BAR
+        # -------------------------------------------------------------
+        st.divider()
+        kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+        kpi1.metric("📦 Packages Found", results["total_packages"])
+        kpi2.metric("🟢 Safe to Deliver", results["safe_count"])
+        kpi3.metric("🟡 Needs Inspection", results["inspect_count"])
+        kpi4.metric("🔴 Needs Replacement", results["replace_count"])
+        kpi5.metric("⚡ Total Latency", f"{elapsed_time:.0f} ms")
 
-        if target_single_image is not None:
-            st.divider()
-            s_run_btn = st.button("🔍 Inspect Single Package", type="primary", use_container_width=True)
+        # -------------------------------------------------------------
+        # 2. LLM INTELLIGENT QUALITY & LOGISTICS ADVICE
+        # -------------------------------------------------------------
+        st.markdown(
+            f"""
+            <div class="llm-card">
+                <div class="llm-title">🤖 AI Quality Assessment & Logistics Advisor</div>
+                <div style="font-size: 1.05rem; line-height: 1.6; color: #f1f5f9; margin-bottom: 1rem;">
+                    {llm_notes['executive_summary']}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-            if s_run_btn:
-                if single_stage_engine is None:
-                    st.error("Damage Detector weights not found.")
-                else:
-                    with st.spinner("Analyzing package damage features..."):
-                        s_res = single_stage_engine.predict_image(
-                            image_input=target_single_image,
-                            save_annotated=True,
-                            save_report=True,
-                            package_id="PKG-SINGLE-TEST",
-                        )
+        col_llm_left, col_llm_right = st.columns(2)
+        with col_llm_left:
+            st.markdown("### 🔬 Structural & Integrity Analysis")
+            if "integrity_analysis" in llm_notes:
+                st.markdown(llm_notes["integrity_analysis"])
+            else:
+                st.info("Full container integrity verified with zero physical compromise.")
 
-                    st.success("Single Parcel Inspection Complete!")
+        with col_llm_right:
+            st.markdown("### 🚚 Courier Field Instructions")
+            if "courier_instructions" in llm_notes:
+                st.markdown(llm_notes["courier_instructions"])
+            if "customer_note" in llm_notes:
+                st.markdown(f"**📱 Customer Update**: *\"{llm_notes['customer_note']}\"*")
 
-                    s_vis1, s_vis2 = st.columns(2)
-                    with s_vis1:
-                        st.markdown("**Original Package**")
-                        st.image(cv2.cvtColor(target_single_image, cv2.COLOR_BGR2RGB), use_container_width=True)
-                    with s_vis2:
-                        st.markdown("**Annotated Damage Detection Overlay**")
-                        pred_bgr = cv2.imread(s_res["annotated_image_path"])
-                        st.image(cv2.cvtColor(pred_bgr, cv2.COLOR_BGR2RGB), use_container_width=True)
+        # -------------------------------------------------------------
+        # 3. SIDE-BY-SIDE VISUAL INSPECTION
+        # -------------------------------------------------------------
+        st.divider()
+        st.subheader("🖼️ Visual Pipeline Progression")
+        img_col1, img_col2 = st.columns(2)
 
-                    st.divider()
-                    st.subheader("📋 Defect & Severity Telemetry")
+        with img_col1:
+            st.markdown("**Stage 1: Individual Package Isolation**")
+            stage1_bgr = cv2.imread(results["stage1_image_path"])
+            st.image(cv2.cvtColor(stage1_bgr, cv2.COLOR_BGR2RGB))
 
-                    s_kpi1, s_kpi2, s_kpi3 = st.columns(3)
-                    decision = s_res["risk_info"]["delivery_decision"]
-                    risk_pts = s_res["risk_info"]["risk_score"]
-                    sev_level = s_res["severity_info"]["severity_level"]
+        with img_col2:
+            st.markdown("**Final Result: Multi-Package Delivery Decision Badges**")
+            final_bgr = cv2.imread(results["final_image_path"])
+            st.image(cv2.cvtColor(final_bgr, cv2.COLOR_BGR2RGB))
 
-                    s_kpi1.metric("Delivery Decision", decision)
-                    s_kpi2.metric("Internal Risk Score", f"{risk_pts:.0f} / 100")
-                    s_kpi3.metric("Severity Level", sev_level)
+        # -------------------------------------------------------------
+        # 4. INDIVIDUAL PACKAGE DEEP DIVE CARDS
+        # -------------------------------------------------------------
+        st.divider()
+        st.subheader("🔎 Individual Package Breakdown")
 
-                    st.progress(min(1.0, risk_pts / 100.0), text=f"Estimated Internal Damage Risk: {risk_pts:.0f} / 100")
-                    st.info(f"**Action Recommended**: {s_res['risk_info']['decision_action']}")
+        for p in results["package_evaluations"]:
+            pkg_id = p["package_id"]
+            decision = p["risk_prediction"]["delivery_decision"]
+            risk_score = p["risk_prediction"]["risk_score"]
+            sev_level = p["severity_assessment"]["severity_level"]
+            cov_pct = p["severity_assessment"]["total_coverage_percentage"]
+            dmgs = p["damage_classes_found"]
 
-                    # Defect list
-                    if s_res["defect_features"]:
-                        st.markdown("#### Detected Damage Breakdown:")
-                        for idx, df in enumerate(s_res["defect_features"]):
-                            st.write(
-                                f"- **Defect #{idx+1}**: `{df['damage_class']}` (Confidence: `{df['confidence']:.2f}`) | "
-                                f"Area: `{df['area_percentage']}` | Location: `{df['spatial_placement']}`"
-                            )
+            with st.expander(f"📦 {pkg_id}  —  {decision} (Risk Score: {risk_score:.0f}/100)", expanded=True):
+                c_left, c_right = st.columns([1, 2])
+
+                with c_left:
+                    if Path(p["crop_path"]).exists():
+                        crop_img = Image.open(p["crop_path"])
+                        st.image(crop_img, caption=f"{pkg_id} Isolated Crop")
+
+                with c_right:
+                    if decision == "SAFE TO DELIVER":
+                        st.markdown(f'<span class="badge-safe">🟢 {decision}</span>', unsafe_allow_html=True)
+                    elif decision == "INSPECT BEFORE DELIVERY":
+                        st.markdown(f'<span class="badge-inspect">🟡 {decision}</span>', unsafe_allow_html=True)
                     else:
-                        st.success("✨ No physical damage defects detected. Package is in intact condition.")
+                        st.markdown(f'<span class="badge-replace">🔴 {decision}</span>', unsafe_allow_html=True)
 
-    # =========================================================================
-    # TAB 3: SAMPLE GALLERY & QUICK TESTS
-    # =========================================================================
-    with tab3:
-        st.subheader("🖼️ Pre-loaded Test Sample Gallery")
-        st.caption("Select any sample below to quickly preview test scenes.")
+                    st.markdown(f"**Action Required**: {p['risk_prediction']['action_required']}")
+                    st.progress(min(1.0, risk_score / 100.0), text=f"Estimated Internal Damage Risk: {risk_score:.0f} / 100")
 
-        st.markdown("### 🏢 Multiple Parcels Scenes")
-        m_dir = SAMPLE_IMAGES_DIR / "multiple_parcels"
-        if m_dir.exists():
-            m_imgs = list(m_dir.glob("*.jpg"))[:6]
-            if m_imgs:
-                cols = st.columns(len(m_imgs))
-                for i, p in enumerate(m_imgs):
-                    with cols[i]:
-                        st.image(Image.open(p), caption=p.name, use_container_width=True)
+                    st.markdown(
+                        f"""
+                        - **Damage Detected**: {', '.join(dmgs) if dmgs else 'None (Clean)'} ({p['defects_detected_count']} defects)
+                        - **Severity Level**: `{sev_level}` (Damage Area Coverage: `{cov_pct}`)
+                        - **Stage 1 Detector Confidence**: `{p['detector_confidence']:.2f}`
+                        - **Bounding Box**: `{p['original_bbox']}`
+                        - **Severity Rationale**: {p['severity_assessment']['rationale']}
+                        """
+                    )
 
+        # -------------------------------------------------------------
+        # 5. EXPORT & DOWNLOAD
+        # -------------------------------------------------------------
         st.divider()
-        st.markdown("### 📦 Single Parcel Samples")
-        s_dir = SAMPLE_IMAGES_DIR / "single_parcel"
-        if s_dir.exists():
-            s_imgs = list(s_dir.glob("*.jpg"))[:6]
-            if s_imgs:
-                cols = st.columns(len(s_imgs))
-                for i, p in enumerate(s_imgs):
-                    with cols[i]:
-                        st.image(Image.open(p), caption=p.name, use_container_width=True)
-
-    # =========================================================================
-    # TAB 4: MODEL ANALYTICS & METRICS
-    # =========================================================================
-    with tab4:
-        st.subheader("📊 Model Performance & Dataset Metrics")
-
-        m_col1, m_col2 = st.columns(2)
-
-        with m_col1:
-            st.markdown("### Stage 1: Individual Package Detector")
-            pkg_report_p = REPORTS_DIR / "package_detector_dataset_report.json"
-            if pkg_report_p.exists():
-                p_rep = load_json(pkg_report_p)
-                st.json(p_rep)
-
-        with m_col2:
-            st.markdown("### Stage 2: Damage Detector Metrics")
-            dmg_report_p = REPORTS_DIR / "model_metrics.json"
-            if dmg_report_p.exists():
-                d_rep = load_json(dmg_report_p)
-                st.json(d_rep)
-
-        st.divider()
-        st.subheader("📈 Training & Validation Visualizations")
-        vis_dir = OUTPUTS_DIR / "visualizations"
-        if vis_dir.exists():
-            v_imgs = list(vis_dir.glob("*.png")) + list(vis_dir.glob("*.jpg"))
-            for v_img in v_imgs[:4]:
-                st.image(Image.open(v_img), caption=v_img.name, use_container_width=True)
+        d_col1, d_col2 = st.columns(2)
+        with d_col1:
+            if Path(results["json_report_path"]).exists():
+                with open(results["json_report_path"], "r") as f:
+                    json_bytes = f.read()
+                st.download_button(
+                    label="📥 Download JSON Report",
+                    data=json_bytes,
+                    file_name="package_inspection_report.json",
+                    mime="application/json",
+                )
+        with d_col2:
+            if Path(results["txt_report_path"]).exists():
+                with open(results["txt_report_path"], "r") as f:
+                    txt_bytes = f.read()
+                st.download_button(
+                    label="📥 Download TXT Summary Report",
+                    data=txt_bytes,
+                    file_name="package_inspection_report.txt",
+                    mime="text/plain",
+                )
 
 
 if __name__ == "__main__":
