@@ -1,0 +1,41 @@
+{
+  "single_parcel": {
+    "train": 306,
+    "val": 27,
+    "test": 12,
+    "total": 345
+  },
+  "multiple_parcels": {
+    "train": 198,
+    "val": 9,
+    "test": 6,
+    "total": 213
+  },
+  "empty_or_unlabeled": 0,
+  "sample_images_saved": {
+    "single_parcel": [
+      "single_parcel_01.jpg",
+      "single_parcel_02.jpg",
+      "single_parcel_03.jpg",
+      "single_parcel_04.jpg",
+      "single_parcel_05.jpg",
+      "single_parcel_06.jpg",
+      "single_parcel_07.jpg",
+      "single_parcel_08.jpg",
+      "single_parcel_09.jpg",
+      "single_parcel_10.jpg"
+    ],
+    "multiple_parcels": [
+      "multi_parcel_01.jpg",
+      "multi_parcel_02.jpg",
+      "multi_parcel_03.jpg",
+      "multi_parcel_04.jpg",
+      "multi_parcel_05.jpg",
+      "multi_parcel_06.jpg",
+      "multi_parcel_07.jpg",
+      "multi_parcel_08.jpg",
+      "multi_parcel_09.jpg",
+      "multi_parcel_10.jpg"
+    ]
+  }
+}

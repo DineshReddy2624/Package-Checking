@@ -1,0 +1,21 @@
+===========================================================================
+     SINGLE PARCEL VS MULTIPLE PARCELS DATASET SEPARATION REPORT
+===========================================================================
+1. SINGLE PARCEL CATEGORY (Exactly 1 Package/Parcel per scene):
+   - Total Images   : 345
+   - Train Split    : 306
+   - Val Split      : 27
+   - Test Split     : 12
+   - Sample Folder  : sample_images/single_parcel/
+
+2. MULTIPLE PARCELS CATEGORY (2 or more Packages/Parcels per scene):
+   - Total Images   : 213
+   - Train Split    : 198
+   - Val Split      : 9
+   - Test Split     : 6
+   - Sample Folder  : sample_images/multiple_parcels/
+
+3. PIPELINE USAGE:
+   - Single Parcel Mode : Direct Damage Detection + Severity + Internal Risk
+   - Multi-Parcel Mode  : Stage 1 Package Detector -> Crop -> Stage 2 Damage Detector
+===========================================================================
