@@ -1,6 +1,6 @@
 """
 Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk Prediction System.
-Interactive Streamlit Application with Auto-Detection, Two-Stage Vision Pipeline, and LLM Logistics Advisor.
+Premium Streamlit Application with Auto-Detection, Two-Stage Vision Pipeline, and Integrated AI Quality Advisor.
 """
 
 import os
@@ -28,7 +28,6 @@ from src.utils import (
     load_json,
 )
 from src.multi_package_pipeline import TwoStagePackageInspector
-from src.inference import PackageDamagePredictor
 from src.llm_advisor import generate_llm_inspection_notes
 
 # Streamlit Page Setup
@@ -39,90 +38,131 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom Glassmorphic & Modern Styling
+# Custom High-End Modern Styling
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
     
-    .hero-header {
-        padding: 1.5rem 2rem;
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 1.5rem;
-        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    /* Hero Header */
+    .hero-container {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 50%, rgba(15, 23, 42, 0.95) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 20px;
+        padding: 1.8rem 2.2rem;
+        margin-bottom: 1.8rem;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
     }
     
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 2.3rem;
         font-weight: 800;
-        background: linear-gradient(90deg, #60a5fa 0%, #34d399 50%, #a78bfa 100%);
+        letter-spacing: -0.5px;
+        background: linear-gradient(90deg, #60a5fa 0%, #34d399 40%, #a78bfa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
     }
     
-    .hero-sub {
+    .hero-subtitle {
         color: #94a3b8;
-        font-size: 1rem;
-        margin-top: 0.4rem;
+        font-size: 1.05rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
     }
     
-    .llm-card {
-        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 14px;
-        padding: 1.4rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    .telemetry-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 30px;
+        padding: 4px 14px;
+        font-size: 0.82rem;
+        color: #cbd5e1;
+        font-family: 'JetBrains Mono', monospace;
     }
     
-    .llm-title {
-        font-size: 1.2rem;
+    /* AI Advisor Glassmorphic Card */
+    .ai-card {
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+        border: 1px solid rgba(96, 165, 250, 0.3);
+        border-radius: 18px;
+        padding: 1.6rem;
+        margin-bottom: 1.8rem;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.12);
+    }
+    
+    .ai-card-header {
+        font-size: 1.25rem;
         font-weight: 700;
         color: #60a5fa;
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 0.8rem;
+        gap: 10px;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.7rem;
     }
     
+    .ai-summary-text {
+        font-size: 1.08rem;
+        line-height: 1.7;
+        color: #f8fafc;
+        font-weight: 400;
+    }
+    
+    /* Decision Badges */
     .badge-safe {
         background: linear-gradient(90deg, #059669, #10b981);
         color: #ffffff;
-        padding: 6px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
-        display: inline-block;
         letter-spacing: 0.5px;
+        display: inline-block;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
     
     .badge-inspect {
         background: linear-gradient(90deg, #d97706, #f59e0b);
         color: #ffffff;
-        padding: 6px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
-        display: inline-block;
         letter-spacing: 0.5px;
+        display: inline-block;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     }
     
     .badge-replace {
         background: linear-gradient(90deg, #dc2626, #ef4444);
         color: #ffffff;
-        padding: 6px 14px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-weight: 700;
         font-size: 0.85rem;
-        display: inline-block;
         letter-spacing: 0.5px;
+        display: inline-block;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    
+    /* Sub-card Container */
+    .subcard {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 1.2rem;
+        height: 100%;
     }
     </style>
     """,
@@ -161,36 +201,44 @@ def load_vision_engines(pkg_conf: float, dmg_conf: float):
 
 
 def main():
-    # Hero Banner
+    hw_info = detect_hardware()
+
+    # Premium Hero Header
     st.markdown(
-        """
-        <div class="hero-header">
+        f"""
+        <div class="hero-container">
             <div class="hero-title">📦 Smart AI Package Damage & Risk Advisor</div>
-            <div class="hero-sub">Auto-Detecting Computer Vision Pipeline with LLM-Powered Quality & Logistics Reasoning</div>
+            <div class="hero-subtitle">Automated Two-Stage Computer Vision & Generative AI Logistics Intelligence</div>
+            <div style="margin-top: 1rem; display: flex; gap: 10px; flex-wrap: wrap;">
+                <span class="telemetry-tag">⚡ Engine: {hw_info['recommended_device'].upper()}</span>
+                <span class="telemetry-tag">🧠 PyTorch: {hw_info['pytorch_version']}</span>
+                <span class="telemetry-tag">✨ AI Advisor: Auto-Active</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    hw_info = detect_hardware()
-
-    # Sidebar Controls
+    # Clean Sidebar: Focused only on practical vision sensitivity & decision rules
     with st.sidebar:
-        st.header("⚡ System & Model Control")
-        st.caption(f"Device: **{hw_info['recommended_device'].upper()}** | PyTorch: **{hw_info['pytorch_version']}**")
-
-        st.subheader("🤖 LLM Reasoning Engine")
-        llm_provider = st.selectbox("LLM Provider", ["Google Gemini (Recommended)", "OpenAI GPT-4o", "Built-in Expert Reasoning"])
-        api_key_input = st.text_input("API Key (Optional)", type="password", help="Leave blank to use built-in Expert Logistics Reasoning Engine")
-
-        st.divider()
-        st.subheader("🎯 Vision Sensitivity")
-        pkg_conf = st.slider("Package Detection Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
-        dmg_conf = st.slider("Damage Defect Confidence", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
+        st.header("🎯 Detection Controls")
+        
+        pkg_conf = st.slider("Package Detection Sensitivity", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
+        dmg_conf = st.slider("Damage Detection Sensitivity", min_value=0.10, max_value=0.90, value=0.25, step=0.05)
         crop_margin = st.slider("Crop Margin (%)", min_value=0, max_value=15, value=5, step=1) / 100.0
 
         st.divider()
-        st.subheader("Model Status")
+        st.subheader("📋 Delivery Decision Protocol")
+        st.markdown(
+            """
+            * 🟢 **Risk < 25**: `SAFE TO DELIVER`
+            * 🟡 **Risk 25 – 65**: `INSPECT BEFORE DELIVERY`
+            * 🔴 **Risk > 65**: `REPLACE PACKAGE`
+            """
+        )
+
+        st.divider()
+        st.subheader("🛡️ Model Status")
         two_stage_engine, pkg_path, dmg_path = load_vision_engines(pkg_conf, dmg_conf)
         if pkg_path:
             st.success(f"Stage 1 Detector: `{pkg_path.name}`")
@@ -198,14 +246,14 @@ def main():
             st.success(f"Stage 2 Damage Model: `{dmg_path.name}`")
 
     # Main Area: Auto-Detection
-    st.subheader("📥 Input Package or Warehouse Scene")
+    st.subheader("📥 Inspect Package or Warehouse Scene")
     input_col1, input_col2 = st.columns([1, 1])
 
     with input_col1:
         uploaded_file = st.file_uploader(
-            "Upload any image (Single package or multi-package warehouse scene)",
+            "Upload any image (Single package or warehouse scene)",
             type=["jpg", "jpeg", "png", "webp"],
-            help="The system will automatically isolate each package, inspect for defects, and generate LLM quality notes.",
+            help="Drop any image to automatically detect packages, analyze defects, and generate AI logistics notes.",
         )
 
     with input_col2:
@@ -221,7 +269,7 @@ def main():
             ["None"] + sorted(list(unique_samples.keys())),
         )
 
-    # Resolve image
+    # Resolve image input
     input_image_bgr = None
     image_source_name = "custom_upload.jpg"
 
@@ -240,7 +288,7 @@ def main():
             st.error("Vision models are loading or not initialized yet.")
             return
 
-        with st.spinner("🤖 Auto-Detecting Packages, Analyzing Damage, & Generating LLM Insights..."):
+        with st.spinner("🤖 Auto-Detecting Packages, Analyzing Damage, & Generating AI Insights..."):
             start_time = time.time()
             results = two_stage_engine.inspect_scene(
                 image_input=input_image_bgr,
@@ -248,12 +296,10 @@ def main():
             )
             elapsed_time = (time.time() - start_time) * 1000
 
-            # Generate LLM Logistics Notes
-            provider_code = "gemini" if "Gemini" in llm_provider else ("openai" if "OpenAI" in llm_provider else "expert")
+            # Generate AI Logistics Notes Automatically
             llm_notes = generate_llm_inspection_notes(
                 inspection_data=results,
-                api_key=api_key_input if api_key_input.strip() else None,
-                provider=provider_code,
+                provider="gemini",
             )
 
         # -------------------------------------------------------------
@@ -268,13 +314,13 @@ def main():
         kpi5.metric("⚡ Total Latency", f"{elapsed_time:.0f} ms")
 
         # -------------------------------------------------------------
-        # 2. LLM INTELLIGENT QUALITY & LOGISTICS ADVICE
+        # 2. AI INTELLIGENT QUALITY & LOGISTICS ADVICE
         # -------------------------------------------------------------
         st.markdown(
             f"""
-            <div class="llm-card">
-                <div class="llm-title">🤖 AI Quality Assessment & Logistics Advisor</div>
-                <div style="font-size: 1.05rem; line-height: 1.6; color: #f1f5f9; margin-bottom: 1rem;">
+            <div class="ai-card">
+                <div class="ai-card-header">✨ AI Quality Assessment & Logistics Advisor</div>
+                <div class="ai-summary-text">
                     {llm_notes['executive_summary']}
                 </div>
             </div>
@@ -284,18 +330,35 @@ def main():
 
         col_llm_left, col_llm_right = st.columns(2)
         with col_llm_left:
-            st.markdown("### 🔬 Structural & Integrity Analysis")
-            if "integrity_analysis" in llm_notes:
-                st.markdown(llm_notes["integrity_analysis"])
-            else:
-                st.info("Full container integrity verified with zero physical compromise.")
+            st.markdown(
+                f"""
+                <div class="subcard">
+                    <h4 style="margin-top:0; color:#38bdf8;">🔬 Structural & Integrity Analysis</h4>
+                    <div style="font-size: 0.95rem; line-height: 1.6; color:#cbd5e1;">
+                        {llm_notes.get('integrity_analysis', 'Full container integrity verified with zero physical compromise.')}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         with col_llm_right:
-            st.markdown("### 🚚 Courier Field Instructions")
-            if "courier_instructions" in llm_notes:
-                st.markdown(llm_notes["courier_instructions"])
-            if "customer_note" in llm_notes:
-                st.markdown(f"**📱 Customer Update**: *\"{llm_notes['customer_note']}\"*")
+            courier_txt = llm_notes.get('courier_instructions', 'Standard route dispatch permitted.')
+            cust_txt = llm_notes.get('customer_note', 'Your package passed AI quality inspection with 100% integrity.')
+            st.markdown(
+                f"""
+                <div class="subcard">
+                    <h4 style="margin-top:0; color:#34d399;">🚚 Courier Field Protocol & Customer Update</h4>
+                    <div style="font-size: 0.95rem; line-height: 1.6; color:#cbd5e1; margin-bottom: 0.8rem;">
+                        {courier_txt}
+                    </div>
+                    <div style="font-size: 0.9rem; color:#94a3b8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.6rem;">
+                        📱 <b>Customer SMS/Tracking</b>: <i>"{cust_txt}"</i>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         # -------------------------------------------------------------
         # 3. SIDE-BY-SIDE VISUAL INSPECTION
