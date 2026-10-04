@@ -1,0 +1,35 @@
+{
+  "dataset_root": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted",
+  "data_yaml_found": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted\\box_defect_dataset\\box_defect_dataset\\data_e1_baseline.yaml",
+  "total_images": 1352,
+  "splits": {
+    "train_images": 975,
+    "validation_images": 168,
+    "test_images": 209,
+    "unsplit_images": 0
+  },
+  "annotations": {
+    "total_annotations": 2001,
+    "number_of_classes": 4,
+    "class_names": [
+      "colanovia",
+      "rotura_bulto",
+      "abolladura",
+      "rotura_retractil"
+    ],
+    "class_distribution": {
+      "colanovia": 903,
+      "rotura_bulto": 100,
+      "abolladura": 202,
+      "rotura_retractil": 796
+    }
+  },
+  "data_quality": {
+    "corrupted_images_count": 0,
+    "missing_labels_count": 0,
+    "empty_labels_count": 233,
+    "invalid_labels_count": 0,
+    "corrupted_images_samples": [],
+    "invalid_labels_samples": []
+  }
+}

@@ -1,0 +1,9 @@
+path: D:/F Drive/2 Prathumuna Bro/Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System/Code/data/extracted/box_defect_dataset/box_defect_dataset
+train: real/images/train
+val: real/images/valid
+names:
+  0: colanovia
+  1: rotura_bulto
+  2: abolladura
+  3: rotura_retractil
+nc: 4

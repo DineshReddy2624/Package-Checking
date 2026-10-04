@@ -1,0 +1,25 @@
+=================================================================
+DATASET INSPECTION & VALIDATION REPORT
+=================================================================
+Dataset Root          : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted
+Config File (YAML)    : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted\box_defect_dataset\box_defect_dataset\data_e1_baseline.yaml
+Total Images          : 1352
+  - Train Split       : 975
+  - Validation Split  : 168
+  - Test Split        : 209
+-----------------------------------------------------------------
+Number of Classes     : 4
+Class Names           : colanovia, rotura_bulto, abolladura, rotura_retractil
+Total Annotations     : 2001
+Class Distribution    :
+  - colanovia           : 903
+  - rotura_bulto        : 100
+  - abolladura          : 202
+  - rotura_retractil    : 796
+-----------------------------------------------------------------
+Data Quality Summary  :
+  - Corrupted Images  : 0
+  - Missing Labels    : 0
+  - Empty Labels      : 233
+  - Invalid Labels    : 0
+=================================================================

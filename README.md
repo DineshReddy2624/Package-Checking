@@ -22,37 +22,59 @@ An end-to-end computer vision and intelligent risk assessment pipeline designed 
 
 ---
 
-## 1. Project Overview & Pipeline Architecture
+## 1. Project Overview & Two-Stage Pipeline Architecture
+
+The system features a **Two-Stage Inspection Engine** capable of handling both single package deliveries and dense warehouse/pallet scenes with multiple packages:
 
 ```
-Package Image (Camera / Stream / Upload)
-      │
-      ▼
-Image Preprocessing & Normalization
-      │
-      ▼
-YOLOv8 Damage Detection (yolov8n.pt)
-      │
-      ▼
-Defect Bounding Boxes + Damage Classes + Confidence Scores
-      │
-      ▼
-Image-Based Geometric Feature Extraction (Area Ratio, Aspect Ratio, Spatial Coordinates)
-      │
-      ▼
-Heuristic Damage Severity Assessment (No Damage / Minor / Moderate / Severe)
-      │
-      ▼
-Estimated Internal Damage Risk Score (0 – 100 Index)
-      │
-      ▼
-Automated Delivery Decision (SAFE TO DELIVER / INSPECT BEFORE DELIVERY / REPLACE PACKAGE)
-      │
-      ▼
-Human-Readable & JSON Inspection Reports (`outputs/reports/`)
-      │
-      ▼
-Optional Firebase Firestore Cloud Logging
+                  [ MULTI-PACKAGE SCENE IMAGE ]
+                   (Warehouse / Pallet / Conveyor)
+                                 │
+                                 ▼
+                     ┌───────────────────────┐
+                     │   STAGE 1: DETECTOR   │
+                     │ package_detector_best │
+                     └───────────┬───────────┘
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        ▼                        ▼                        ▼
+  [ Package 1 ]            [ Package 2 ]            [ Package 3 ]
+  (x1,y1,x2,y2)            (x1,y1,x2,y2)            (x1,y1,x2,y2)
+        │                        │                        │
+        └────────────────────────┼────────────────────────┘
+                                 ▼
+                     ┌───────────────────────┐
+                     │ INDIVIDUAL CROPPER    │
+                     │ (5% Margin + Clamped) │
+                     └───────────┬───────────┘
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        ▼                        ▼                        ▼
+ [ package_001.jpg ]      [ package_002.jpg ]      [ package_003.jpg ]
+        │                        │                        │
+        └────────────────────────┼────────────────────────┘
+                                 ▼
+                     ┌───────────────────────┐
+                     │   STAGE 2: DETECTOR   │
+                     │  damage_detector_best │
+                     └───────────┬───────────┘
+                                 │
+                                 ▼
+                     ┌───────────────────────┐
+                     │  HEURISTIC SEVERITY   │
+                     │  & RISK ENGINE (0-100)│
+                     └───────────┬───────────┘
+                                 │
+                                 ▼
+                     ┌───────────────────────┐
+                     │   DELIVERY DECISION   │
+                     │ SAFE / INSPECT / REPL │
+                     └───────────┬───────────┘
+                                 │
+                                 ▼
+          [ outputs/final/multi_package_final_result.jpg ]
+          [ outputs/reports/multi_package_inspection.json ]
+          [ outputs/reports/multi_package_inspection.txt ]
 ```
 
 ---

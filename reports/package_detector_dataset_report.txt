@@ -1,0 +1,22 @@
+======================================================================
+PACKAGE DETECTOR DATASET INSPECTION & VALIDATION REPORT
+======================================================================
+Dataset Root          : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted_package_detector
+Config File (YAML)    : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted_package_detector\data.yaml
+Class Mapping Policy  : Original raw classes: ['cardboard']. Mapped to unified class: ['package'] for generalized individual package detection.
+Total Images          : 558
+  - Train Split       : 504
+  - Validation Split  : 36
+  - Test Split        : 18
+----------------------------------------------------------------------
+Number of Classes     : 1
+Class Names           : package
+Total Annotations     : 1649
+Class Distribution    : {'package': 1649}
+----------------------------------------------------------------------
+Data Quality Summary  :
+  - Corrupted Images  : 0
+  - Missing Labels    : 51
+  - Empty Labels      : 0
+  - Invalid Labels    : 0
+======================================================================

@@ -1,0 +1,31 @@
+{
+  "dataset_name": "Stage 1 Individual Package Detector Dataset",
+  "dataset_root": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted_package_detector",
+  "data_yaml_found": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted_package_detector\\data.yaml",
+  "class_mapping_policy": "Original raw classes: ['cardboard']. Mapped to unified class: ['package'] for generalized individual package detection.",
+  "total_images": 558,
+  "splits": {
+    "train_images": 504,
+    "validation_images": 36,
+    "test_images": 18
+  },
+  "annotations": {
+    "total_annotations": 1649,
+    "number_of_classes": 1,
+    "class_names": [
+      "package"
+    ],
+    "raw_class_names": [
+      "cardboard"
+    ],
+    "class_distribution": {
+      "package": 1649
+    }
+  },
+  "data_quality": {
+    "corrupted_images_count": 0,
+    "missing_labels_count": 51,
+    "empty_labels_count": 0,
+    "invalid_labels_count": 0
+  }
+}

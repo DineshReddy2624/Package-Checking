@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches & Environments
+.venv/
+env/
+venv/
+.cache/
+.pytest_cache/
+
+# Ultralytics & Training runs
+runs/
+*.pt.tmp
+
+# Data folders (raw datasets, extracted datasets)
+data/extracted/
+data/extracted*/
+data/raw/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+======================================================================
+     PACKAGE DAMAGE DETECTION & RISK PREDICTION INSPECTION REPORT
+======================================================================
+Package ID         : PKG-INSPECT-001
+Date / Time        : 2026-10-05 00:30:53
+Image Analyzed     : single_crushed_package.jpg
+Annotated Result   : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\predictions\pred_single_crushed_package.jpg
+----------------------------------------------------------------------
+1. DAMAGE DETECTION SUMMARY
+   Total Defects   : 3
+   Damage Types    : colanovia, rotura_retractil
+   Damage Coverage : 9.48%
+
+2. DEFECT BREAKDOWN:
+   - Defect #1: ROTURA_RETRACTIL | Conf: 0.46 | Loc: Middle-Center | Area: 1.14% | Box: [368.3, 1186.7, 518.2, 1334.8]
+   - Defect #2: COLANOVIA | Conf: 0.42 | Loc: Bottom-Center | Area: 2.78% | Box: [298.8, 1421.1, 499.5, 1691.2]
+   - Defect #3: COLANOVIA | Conf: 0.34 | Loc: Top-Center | Area: 4.97% | Box: [222.3, 211.6, 456.1, 627.0]
+
+3. DAMAGE SEVERITY ASSESSMENT (Heuristic)
+   Severity Level  : Moderate
+   Rationale       : Moderate damage detected (3 defects, 9.5% area coverage).
+
+4. INTERNAL DAMAGE RISK & DELIVERY DECISION
+   Risk Metric     : Estimated Internal Damage Risk Score
+   Risk Score      : 64.8 / 100
+   DECISION        : >>> INSPECT BEFORE DELIVERY <<<
+   Action Required : Moderate package deformation or tearing. Flag for courier/warehouse visual check or recipient notice prior to handover.
+----------------------------------------------------------------------
+Threshold Reference: <25: Safe | 25-65: Inspect Before Delivery | >65: Replace Package
+======================================================================

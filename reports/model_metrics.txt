@@ -1,0 +1,23 @@
+=================================================================
+YOLOv8 MODEL VALIDATION PERFORMANCE REPORT
+=================================================================
+Model Weight Path    : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\models\weights\best.pt
+Evaluation Split     : val
+-----------------------------------------------------------------
+OVERALL ACTUAL PERFORMANCE METRICS:
+  - Precision (B)    : 0.6779
+  - Recall (B)       : 0.4948
+  - mAP@0.50 (B)     : 0.5458
+  - mAP@0.50:0.95 (B): 0.2938
+-----------------------------------------------------------------
+TARGET BENCHMARK COMPARISON:
+  - Target mAP@0.50  : >= 0.90 (90%)
+  - Target Achieved  : NO (Reported honestly from execution)
+  - Inference Latency: 43.26958082193626 ms / image (Target < 1500 ms)
+-----------------------------------------------------------------
+PER-CLASS PERFORMANCE BREAKDOWN:
+  - colanovia           : P=0.776, R=0.619, mAP50=0.671, mAP50-95=0.352
+  - rotura_bulto        : P=0.775, R=0.667, mAP50=0.670, mAP50-95=0.403
+  - abolladura          : P=0.410, R=0.273, mAP50=0.237, mAP50-95=0.120
+  - rotura_retractil    : P=0.750, R=0.421, mAP50=0.605, mAP50-95=0.299
+=================================================================
