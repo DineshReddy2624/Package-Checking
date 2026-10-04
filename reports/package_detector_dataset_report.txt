@@ -1,22 +1,16 @@
-======================================================================
-PACKAGE DETECTOR DATASET INSPECTION & VALIDATION REPORT
-======================================================================
-Dataset Root          : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted_package_detector
-Config File (YAML)    : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\extracted_package_detector\data.yaml
-Class Mapping Policy  : Original raw classes: ['cardboard']. Mapped to unified class: ['package'] for generalized individual package detection.
-Total Images          : 558
-  - Train Split       : 504
-  - Validation Split  : 36
-  - Test Split        : 18
-----------------------------------------------------------------------
-Number of Classes     : 1
-Class Names           : package
-Total Annotations     : 1649
-Class Distribution    : {'package': 1649}
-----------------------------------------------------------------------
-Data Quality Summary  :
-  - Corrupted Images  : 0
-  - Missing Labels    : 51
-  - Empty Labels      : 0
-  - Invalid Labels    : 0
-======================================================================
+===========================================================================
+STAGE 1 MULTI-PACKAGE DETECTOR DATASET VALIDATION REPORT
+===========================================================================
+Dataset Root          : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\multi_package_dataset
+Config YAML           : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\data\processed\package_detector_dataset.yaml
+Total Images          : 972
+  - Train Split       : 901 images (3234 individual boxes)
+  - Val Split         : 49 images (82 individual boxes)
+  - Test Split        : 22 images (43 individual boxes)
+---------------------------------------------------------------------------
+ANNOTATION QUALITY & INDIVIDUAL PACKAGE SUITABILITY:
+  - Total Objects     : 3359 individual packages
+  - Avg Boxes / Image : 3.59 boxes per scene
+  - Avg Box Area Ratio: 9.78% (confirms small individual boxes, NOT full scene)
+  - Contact Sheet     : outputs/package_detector/dataset_annotation_preview.jpg
+===========================================================================

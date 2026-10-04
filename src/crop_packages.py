@@ -91,6 +91,19 @@ def crop_individual_packages(
         if save_to_disk:
             cv2.imwrite(str(crop_path), crop_bgr)
 
+        # Calculate area ratio relative to full image
+        box_area = bw * bh
+        img_area = float(img_w * img_h)
+        area_ratio = box_area / max(1.0, img_area)
+
+        # Flag unusually large boxes covering almost entire image
+        is_suspicious_full_scene = area_ratio > 0.80
+        if is_suspicious_full_scene:
+            logger.warning(
+                f"WARNING: Package {i+1} bounding box area ratio is {area_ratio*100:.1f}%. "
+                f"Detection likely represents the entire scene rather than an individual package."
+            )
+
         conf = confidences[i] if confidences and i < len(confidences) else 1.0
 
         crops_info.append({
@@ -103,6 +116,8 @@ def crop_individual_packages(
             "crop_bbox_clamped": [cx1, cy1, cx2, cy2],
             "crop_width": cx2 - cx1,
             "crop_height": cy2 - cy1,
+            "box_area_ratio_pct": f"{area_ratio * 100:.2f}%",
+            "is_suspicious_full_scene": is_suspicious_full_scene,
             "detector_confidence": round(float(conf), 4),
         })
 

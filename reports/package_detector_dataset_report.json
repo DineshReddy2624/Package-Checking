@@ -1,31 +1,29 @@
 {
-  "dataset_name": "Stage 1 Individual Package Detector Dataset",
-  "dataset_root": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted_package_detector",
-  "data_yaml_found": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\extracted_package_detector\\data.yaml",
-  "class_mapping_policy": "Original raw classes: ['cardboard']. Mapped to unified class: ['package'] for generalized individual package detection.",
-  "total_images": 558,
+  "dataset_name": "Multi-Package Individual Box Object Detection Dataset",
+  "yaml_config": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\data\\processed\\package_detector_dataset.yaml",
+  "total_images": 972,
+  "total_boxes": 3359,
   "splits": {
-    "train_images": 504,
-    "validation_images": 36,
-    "test_images": 18
-  },
-  "annotations": {
-    "total_annotations": 1649,
-    "number_of_classes": 1,
-    "class_names": [
-      "package"
-    ],
-    "raw_class_names": [
-      "cardboard"
-    ],
-    "class_distribution": {
-      "package": 1649
+    "train": {
+      "images": 901,
+      "boxes": 3234
+    },
+    "val": {
+      "images": 49,
+      "boxes": 82
+    },
+    "test": {
+      "images": 22,
+      "boxes": 43
     }
   },
-  "data_quality": {
-    "corrupted_images_count": 0,
-    "missing_labels_count": 51,
-    "empty_labels_count": 0,
-    "invalid_labels_count": 0
+  "classes": [
+    "package"
+  ],
+  "annotation_quality": {
+    "average_boxes_per_train_image": 3.59,
+    "average_box_area_ratio": "9.78%",
+    "is_multi_package_suitable": true,
+    "verification_contact_sheet": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_detector\\dataset_annotation_preview.jpg"
   }
 }

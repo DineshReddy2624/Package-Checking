@@ -133,20 +133,27 @@ class TwoStagePackageInspector:
 
         pkg_boxes = []
         pkg_confs = []
+        img_area = float(img_w * img_h)
+
         if pkg_results.boxes is not None and len(pkg_results.boxes) > 0:
             for box in pkg_results.boxes:
                 xyxy = box.xyxy[0].cpu().numpy().tolist()
                 conf = float(box.conf[0].item())
+                bw = xyxy[2] - xyxy[0]
+                bh = xyxy[3] - xyxy[1]
+                box_area_ratio = (bw * bh) / max(1.0, img_area)
+
+                # Reject detections that cover > 80% of the entire image scene
+                if box_area_ratio > 0.80 and len(pkg_results.boxes) > 1:
+                    logger.warning(
+                        f"Skipping bounding box {xyxy} covering {box_area_ratio*100:.1f}% of image (represents entire scene/pallet, not individual package)."
+                    )
+                    continue
+
                 pkg_boxes.append(xyxy)
                 pkg_confs.append(conf)
 
-        logger.info(f"Detected {len(pkg_boxes)} individual packages in scene.")
-
-        # If no package bounding boxes detected (e.g. tight single package crop), treat whole image as Package 1
-        if not pkg_boxes:
-            logger.info("No individual package bounding boxes separated; inspecting full frame as Package 1.")
-            pkg_boxes = [[0.0, 0.0, float(img_w), float(img_h)]]
-            pkg_confs = [1.0]
+        logger.info(f"Detected {len(pkg_boxes)} individual separate packages in scene.")
 
         # Draw Stage 1 Package Detection image
         stage1_img = img_bgr.copy()
