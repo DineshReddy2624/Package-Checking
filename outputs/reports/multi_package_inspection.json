@@ -2,16 +2,16 @@
   "header": {
     "system_name": "Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk Prediction System",
     "inspection_type": "AI-Based External Condition Assessment & Heuristic Risk Prediction",
-    "timestamp": "2026-10-05 02:55:30",
-    "source_image": "multi_package_20261005025530.jpg",
+    "timestamp": "2026-10-10 20:52:12",
+    "source_image": "multi_package_20261010205212.jpg",
     "final_annotated_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\final\\multi_package_final_result.jpg",
     "stage1_detection_image": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_detector\\multi_package_detection.jpg"
   },
   "summary": {
     "total_packages_detected": 1,
-    "valid_packages_count": 0,
-    "invalid_packages_count": 1,
-    "safe_to_deliver_count": 0,
+    "valid_packages_count": 1,
+    "invalid_packages_count": 0,
+    "safe_to_deliver_count": 1,
     "inspect_before_delivery_count": 0,
     "replace_package_count": 0,
     "quality_gate_threshold_max_area_ratio": "80%",
@@ -20,70 +20,69 @@
   "package_results": [
     {
       "package_id": "Package 1",
-      "is_valid_package": false,
-      "detection_status": "INVALID PACKAGE DETECTION",
-      "delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
-      "risk_score": null,
-      "risk_score_display": "N/A",
+      "is_valid_package": true,
+      "detection_status": "VALID_PACKAGE",
+      "delivery_decision": "SAFE TO DELIVER",
+      "risk_score": 0.0,
+      "risk_score_display": "0 / 100",
       "stage1_package_detection": {
         "package_id": "Package 1",
-        "status": "INVALID_PACKAGE_DETECTION",
-        "package_detection_confidence": 0.893,
+        "status": "VALID_PACKAGE",
+        "package_detection_confidence": 0.9305,
         "bounding_box": [
-          23.1,
-          12.8,
-          1345.1,
-          1073.4
+          78.4,
+          126.7,
+          571.9,
+          363.7
         ],
-        "bounding_box_area_ratio": 0.8916,
-        "bounding_box_area_ratio_pct": "89.16%",
-        "is_suspicious_crop": true,
-        "warning": "WARNING: Detected region is too large to confidently represent an individual package.",
-        "rejection_reason": "Detected region is too large to confidently represent an individual package.",
-        "rejection_action": "Capture a closer image containing the individual package or improve the package detection model."
+        "bounding_box_area_ratio": 0.3808,
+        "bounding_box_area_ratio_pct": "38.08%",
+        "is_suspicious_crop": false,
+        "warning": null
       },
       "stage2_damage_detection": {
-        "status": "SKIPPED_QUALITY_GATE",
-        "damage_detected": null,
-        "damage_detection_result": "Damage analysis was not performed because the package boundary could not be reliably established.",
+        "status": "EVALUATED",
+        "damage_detected": false,
+        "damage_detection_result": "No damage detected",
+        "damage_classes_found": [],
         "damage_confidence": "N/A",
         "defects_detected_count": 0,
         "defects": []
       },
       "stage3_damage_severity": {
-        "status": "SKIPPED_QUALITY_GATE",
-        "severity_level": "Not Evaluated",
-        "damage_area_coverage": "N/A",
+        "status": "EVALUATED",
+        "severity_level": "No Damage",
+        "damage_area_coverage": "0.00%",
         "total_coverage_ratio": 0.0,
         "severity_score_normalized": 0.0,
-        "rationale": "Damage severity evaluation skipped because Stage 1 package detection quality gate failed."
+        "rationale": "No structural or surface defects detected on external package packaging."
       },
       "stage4_internal_damage_risk": {
-        "status": "SKIPPED_QUALITY_GATE",
+        "status": "EVALUATED",
         "risk_metric_name": "Heuristic Estimated Internal Damage Risk Score",
-        "heuristic_risk_score": null,
-        "risk_score_display": "N/A",
+        "heuristic_risk_score": 0.0,
+        "risk_score_display": "0 / 100",
         "score_scale": "0 - 100",
         "is_probability": false,
-        "score_nature": "Not evaluated (Stage 1 Quality Gate rejected)."
+        "score_nature": "Heuristic estimated score based on external visual features, not calibrated probability."
       },
       "stage5_delivery_decision": {
-        "status": "QUALITY_GATE_REJECTED",
-        "recommended_delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
-        "decision_type": "Stage 1 Quality Gate Rejection",
-        "action_required": "Capture a closer image containing the individual package or improve the package detection model.",
-        "justification": "Stage 1 could not reliably isolate an individual package from the input image."
+        "status": "RECOMMENDED",
+        "recommended_delivery_decision": "SAFE TO DELIVER",
+        "decision_type": "Model Recommendation",
+        "action_required": "Based on the detected external condition and the configured heuristic risk threshold, the system recommends this package for delivery.",
+        "justification": "Based on detected external condition and configured heuristic risk threshold."
       },
-      "detector_confidence": 0.893,
+      "detector_confidence": 0.9305,
       "original_bbox": [
-        23.1,
-        12.8,
-        1345.1,
-        1073.4
+        78.4,
+        126.7,
+        571.9,
+        363.7
       ],
-      "box_area_ratio_pct": "89.16%",
-      "is_suspicious_crop": true,
-      "warning": "WARNING: Detected region is too large to confidently represent an individual package.",
+      "box_area_ratio_pct": "38.08%",
+      "is_suspicious_crop": false,
+      "warning": null,
       "crop_filename": "package_001.jpg",
       "crop_path": "D:\\F Drive\\2 Prathumuna Bro\\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\\Code\\outputs\\package_crops\\package_001.jpg",
       "defects_detected_count": 0,
@@ -91,14 +90,14 @@
       "damage_confidence": "N/A",
       "defects": [],
       "severity_assessment": {
-        "severity_level": "Not Evaluated",
-        "total_coverage_percentage": "N/A",
-        "rationale": "Damage analysis skipped due to Stage 1 Quality Gate rejection."
+        "severity_level": "No Damage",
+        "total_coverage_percentage": "0.00%",
+        "rationale": "No structural or surface defects detected on external package packaging."
       },
       "risk_prediction": {
-        "risk_score": null,
-        "delivery_decision": "PACKAGE DETECTION REQUIRES REVIEW",
-        "action_required": "Capture a closer image containing the individual package or improve the package detection model."
+        "risk_score": 0.0,
+        "delivery_decision": "SAFE TO DELIVER",
+        "action_required": "Based on the detected external condition and the configured heuristic risk threshold, the system recommends this package for delivery."
       }
     }
   ],

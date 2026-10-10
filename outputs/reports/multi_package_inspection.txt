@@ -1,31 +1,33 @@
 ===========================================================================
      AI-BASED EXTERNAL CONDITION & MULTI-PACKAGE DAMAGE INSPECTION REPORT
 ===========================================================================
-Image Analyzed        : multi_package_20261005025530.jpg
-Inspection Date/Time  : 2026-10-05 02:55:30
+Image Analyzed        : multi_package_20261010205212.jpg
+Inspection Date/Time  : 2026-10-10 20:52:12
 Total Packages Found  : 1
-  - Valid Packages    : 0
-  - Invalid Detections: 1
-  - Recommended Safe  : 0
+  - Valid Packages    : 1
+  - Invalid Detections: 0
+  - Recommended Safe  : 1
   - Recom. Inspection : 0
   - Recom. Replacement: 0
 ---------------------------------------------------------------------------
 INDIVIDUAL PACKAGE FIVE-STAGE BREAKDOWN:
 ---------------------------------------------------------------------------
-[Package 1] Status: INVALID PACKAGE DETECTION
+[Package 1] Status: VALID_PACKAGE
   STAGE 1 - PACKAGE DETECTION:
-    Package Detection Confidence : 0.89
-    Bounding Box                 : [23.1, 12.8, 1345.1, 1073.4] (Area Ratio: 89.16%)
-    Quality Gate Status          : REJECTED (Oversized Detection)
+    Package Detection Confidence : 0.93
+    Bounding Box                 : [78.4, 126.7, 571.9, 363.7] (Area Ratio: 38.08%)
+    Quality Gate Status          : VALID
     Crop Image Path              : D:\F Drive\2 Prathumuna Bro\Smart AI-Based Delivery Package Damage Detection and Internal Damage Risk  Prediction System\Code\outputs\package_crops\package_001.jpg
   STAGE 2 - DAMAGE DETECTION:
-    Damage Detection Result      : Damage analysis was not performed because the package boundary could not be reliably established.
+    Damage Detection Result      : No damage detected
+    Damage Confidence            : N/A
   STAGE 3 - DAMAGE SEVERITY:
-    Severity Level               : Not Evaluated
+    Severity Level               : No Damage (Damage Coverage: 0.00%)
+    Severity Rationale           : No structural or surface defects detected on external package packaging.
   STAGE 4 - INTERNAL DAMAGE RISK:
-    Heuristic Risk Score         : N/A
+    Heuristic Risk Score         : 0.0 / 100 (Heuristic estimated score based on external visual features, not calibrated probability.)
   STAGE 5 - DELIVERY DECISION:
-    Recommended Action           : >>> PACKAGE DETECTION REQUIRES REVIEW <<<
-    Action Required              : Capture a closer image containing the individual package or improve the package detection model.
+    Recommended Delivery Decision: >>> SAFE TO DELIVER <<<
+    Action Required              : Based on the detected external condition and the configured heuristic risk threshold, the system recommends this package for delivery.
 
 ===========================================================================
